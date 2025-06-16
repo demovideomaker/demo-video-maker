@@ -21,6 +21,7 @@ jobs:
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
+          always-auth: true
           
       - name: Install dependencies
         run: npm ci
@@ -42,6 +43,12 @@ jobs:
             };
             require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           "
+        
+      - name: Create .npmrc file
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
         
       - name: Publish to npm
         run: npm publish --provenance --access public
