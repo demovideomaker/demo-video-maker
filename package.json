@@ -11,6 +11,8 @@
     "start-demo-app": "cd demo-app && npm run dev",
     "test": "jest",
     "test:watch": "jest --watch",
+    "build": "mkdir -p dist && cp demo-cinematic.js dist/ && cp -r lib dist/",
+    "prepublishOnly": "npm run build",
     "generate-sample": "node -e \"const ConfigLoader = require('./lib/configLoader'); new ConfigLoader().generateSampleConfig('./demo.json');\""
   },
   "keywords": [
@@ -35,10 +37,16 @@
     "@playwright/test": "^1.53.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@rollup/plugin-commonjs": "^28.0.5",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "jest": "^29.7.0",
+    "rollup": "^4.43.0",
+    "rollup-plugin-preserve-shebang": "^1.0.1"
   },
   "files": [
     "demo-cinematic.js",
+    "dist/",
     "lib/",
     "README.md",
     "CHANGELOG.md"
