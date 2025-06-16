@@ -19,10 +19,53 @@ console.log(`
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
-// Get command line arguments
+// Get and validate command line arguments
 const args = process.argv.slice(2);
-const projectPath = args[0] || process.cwd();
-const baseUrl = args[1] || 'http://localhost:3003';
+
+function validateProjectPath(inputPath) {
+  if (!inputPath) return process.cwd();
+  
+  try {
+    const normalizedPath = path.resolve(inputPath);
+    const cwd = process.cwd();
+    
+    // Ensure path is within reasonable bounds and not attempting traversal
+    if (normalizedPath.includes('..') || normalizedPath.length > 1000) {
+      console.warn('⚠️  Invalid project path, using current directory');
+      return cwd;
+    }
+    
+    return normalizedPath;
+  } catch {
+    return process.cwd();
+  }
+}
+
+function validateBaseUrl(inputUrl) {
+  if (!inputUrl) return 'http://localhost:3003';
+  
+  try {
+    const url = new URL(inputUrl);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      console.warn('⚠️  Invalid protocol, using default URL');
+      return 'http://localhost:3003';
+    }
+    
+    // Prevent localhost bypass attacks
+    if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1' && !url.hostname.startsWith('192.168.')) {
+      console.warn('⚠️  Only localhost and local IPs allowed');
+      return 'http://localhost:3003';
+    }
+    
+    return url.toString();
+  } catch {
+    console.warn('⚠️  Invalid URL format, using default');
+    return 'http://localhost:3003';
+  }
+}
+
+const projectPath = validateProjectPath(args[0]);
+const baseUrl = validateBaseUrl(args[1]);
 
 // Initialize configuration loader
 const configLoader = new ConfigLoader();
@@ -61,35 +104,95 @@ async function createConfigDrivenDemo() {
   }
 }
 
-async function createDemoFromConfig(config, configPath) {
-  const browser = await chromium.launch({
-    headless: false,
-    args: [
-      '--force-device-scale-factor=1',
-      '--disable-gpu-rasterization',
-      '--disable-gpu-compositing',
-      '--disable-software-rasterizer'
-    ]
-  });
-  
-  console.log('\n🎥 Creating cinematic demo with professional effects...\n');
-  
-  const context = await browser.newContext({
-    viewport: { width: 1920, height: 1080 }, // Full HD
-    deviceScaleFactor: 1,
-    recordVideo: {
-      dir: videosDir,
-      size: { width: 1920, height: 1080 }
+// URL validation function
+function validateAndSanitizeUrl(baseUrl, relativePath) {
+  try {
+    // Validate base URL
+    const base = new URL(baseUrl);
+    
+    if (!relativePath) return base.toString();
+    
+    // Sanitize relative path
+    if (relativePath.includes('..') || relativePath.includes('//') || 
+        relativePath.includes('javascript:') || relativePath.includes('data:') ||
+        relativePath.includes('<script') || relativePath.length > 2000) {
+      console.warn('⚠️  Invalid URL path detected, using base URL');
+      return base.toString();
     }
-  });
+    
+    // Construct safe URL
+    const safeUrl = new URL(relativePath, base);
+    
+    // Ensure protocol and host match base URL
+    if (safeUrl.protocol !== base.protocol || safeUrl.host !== base.host) {
+      console.warn('⚠️  URL host/protocol mismatch, using base URL');
+      return base.toString();
+    }
+    
+    return safeUrl.toString();
+  } catch (error) {
+    console.error('URL validation failed:', error.message);
+    return baseUrl; // Return safe fallback
+  }
+}
+
+async function createDemoFromConfig(config, configPath) {
+  let browser = null;
+  let context = null;
+  let page = null;
   
-  const page = await context.newPage();
+  try {
+    browser = await chromium.launch({
+      headless: false,
+      args: [
+        '--force-device-scale-factor=1',
+        '--disable-gpu-rasterization',
+        '--disable-gpu-compositing',
+        '--disable-software-rasterizer'
+      ]
+    });
+  
+    console.log('\n🎥 Creating cinematic demo with professional effects...\n');
+    
+    context = await browser.newContext({
+      viewport: { width: 1920, height: 1080 }, // Full HD
+      deviceScaleFactor: 1,
+      recordVideo: {
+        dir: videosDir,
+        size: { width: 1920, height: 1080 }
+      }
+    });
+    
+    page = await context.newPage();
   
   // Current mouse position
   let mouseX = 960;
   let mouseY = 540;
   
-  // Initialize cinematic effects
+  // Load and inject cinematic effects script securely
+  try {
+    const cinematicEffectsScript = fs.readFileSync(
+      path.join(__dirname, 'lib', 'cinematicEffects.js'), 
+      'utf8'
+    );
+    
+    // Validate script content for security
+    const dangerousPatterns = ['eval(', 'Function(', 'setTimeout(', 'setInterval(', 'document.write'];
+    const hasUnsafeContent = dangerousPatterns.some(pattern => 
+      cinematicEffectsScript.includes(pattern)
+    );
+    
+    if (hasUnsafeContent) {
+      throw new Error('Unsafe content detected in cinematic effects script');
+    }
+    
+    await page.addInitScript(cinematicEffectsScript);
+  } catch (error) {
+    console.error('❌ Failed to load cinematic effects:', error.message);
+    throw error;
+  }
+
+  // Legacy inline script (remove after testing)
   await page.addInitScript(() => {
     // Wait for DOM
     if (document.readyState !== 'loading') {
@@ -378,34 +481,57 @@ async function createDemoFromConfig(config, configPath) {
     }
   });
   
-  // Helper functions for cinematic effects
+  // Helper functions for cinematic effects with memory management
   async function cinematicMove(targetX, targetY, duration = 1000) {
     const steps = 60;
     const stepDelay = duration / steps;
+    const timeouts = []; // Track timeouts for cleanup
     
-    for (let i = 0; i <= steps; i++) {
-      const progress = i / steps;
-      // Smooth easing curve
-      const ease = progress < 0.5 
-        ? 4 * progress * progress * progress 
-        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-      
-      const x = mouseX + (targetX - mouseX) * ease;
-      const y = mouseY + (targetY - mouseY) * ease;
-      
-      await page.evaluate(({ x, y }) => {
-        if (window.cinematicControl) {
-          window.cinematicControl.moveCursor(x, y);
-          window.cinematicControl.updateCameraFollow();
+    try {
+      for (let i = 0; i <= steps; i++) {
+        // Check if page is still alive
+        if (page.isClosed()) {
+          console.warn('⚠️  Page closed during animation, stopping cinematicMove');
+          break;
         }
-      }, { x, y });
+        
+        const progress = i / steps;
+        // Smooth easing curve
+        const ease = progress < 0.5 
+          ? 4 * progress * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        const x = mouseX + (targetX - mouseX) * ease;
+        const y = mouseY + (targetY - mouseY) * ease;
+        
+        try {
+          await page.evaluate(({ x, y }) => {
+            if (window.cinematicControl) {
+              window.cinematicControl.moveCursor(x, y);
+              window.cinematicControl.updateCameraFollow();
+            }
+          }, { x, y });
+          
+          await page.mouse.move(x, y);
+          await page.waitForTimeout(stepDelay);
+        } catch (error) {
+          if (error.message.includes('Target page, context or browser has been closed')) {
+            console.warn('⚠️  Browser closed during animation, stopping cinematicMove');
+            break;
+          }
+          throw error;
+        }
+      }
       
-      await page.mouse.move(x, y);
-      await page.waitForTimeout(stepDelay);
+      mouseX = targetX;
+      mouseY = targetY;
+    } catch (error) {
+      // Clear any pending timeouts on error
+      timeouts.forEach(id => clearTimeout(id));
+      if (!error.message.includes('closed')) {
+        throw error;
+      }
     }
-    
-    mouseX = targetX;
-    mouseY = targetY;
   }
   
   async function zoomToElement(selector, scale = 2, padding = 50) {
@@ -621,7 +747,8 @@ async function createDemoFromConfig(config, configPath) {
           
         case 'navigate':
           console.log(`${stepPrefix} Navigating to ${interaction.url}`);
-          await page.goto(baseUrl + interaction.url, { waitUntil: 'networkidle' });
+          const safeUrl = validateAndSanitizeUrl(baseUrl, interaction.url);
+          await page.goto(safeUrl, { waitUntil: 'networkidle' });
           await page.waitForTimeout(config.timings.pageLoadWait);
           break;
           
@@ -647,8 +774,8 @@ async function createDemoFromConfig(config, configPath) {
 
   // Start the demo
   try {
-    // Navigate to entry point
-    const entryUrl = config.entry.url ? baseUrl + config.entry.url : baseUrl;
+    // Navigate to entry point with URL validation
+    const entryUrl = validateAndSanitizeUrl(baseUrl, config.entry.url);
     console.log(`🌐 Navigating to: ${entryUrl}`);
     await page.goto(entryUrl, { waitUntil: 'networkidle' });
     await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
@@ -718,12 +845,25 @@ async function createDemoFromConfig(config, configPath) {
     
   } catch (error) {
     console.error('\n❌ Error during demo:', error.message);
+  } finally {
+    // Ensure cleanup always happens regardless of success or failure
+    try {
+      if (page && !page.isClosed()) {
+        await page.close();
+        page = null;
+      }
+      if (context) {
+        await context.close();
+        context = null;
+      }
+      if (browser && browser.isConnected()) {
+        await browser.close();
+        browser = null;
+      }
+    } catch (cleanupError) {
+      console.error('❌ Cleanup error:', cleanupError.message);
+    }
   }
-  
-  // Close and save
-  await page.close();
-  await context.close();
-  await browser.close();
   
   // Wait for video processing
   await new Promise(resolve => setTimeout(resolve, 3000));
