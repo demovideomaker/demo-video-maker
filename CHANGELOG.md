@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-06-16
 
 ### Added
-- 🎬 **Complete Rewrite** - Cinematic demo video automation tool
+- 🎬 **Complete Rewrite** - Cinematic demo video maker tool
 - 📋 **Configuration System** - JSON-based demo definitions with validation
 - 🎯 **Interactive Elements** - Click, hover, type, scroll, wait, and navigate interactions
 - 📷 **Camera Effects** - Dynamic zoom and pan following mouse movement

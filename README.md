@@ -1,10 +1,10 @@
-# 🎬 Demo Video Automation
+# 🎬 Demo Video Maker
 
 **Create stunning cinematic demo videos automatically from your web applications**
 
-[![npm version](https://badge.fury.io/js/demo-video-automation.svg)](https://www.npmjs.com/package/demo-video-automation)
-[![Node.js CI](https://github.com/demo-video-automation/cinematic-demos/workflows/Node.js%20CI/badge.svg)](https://github.com/demo-video-automation/cinematic-demos/actions)
-[![Security Rating](https://img.shields.io/badge/security-A+-green.svg)](https://github.com/demo-video-automation/cinematic-demos/security)
+[![npm version](https://badge.fury.io/js/demo-video-maker.svg)](https://www.npmjs.com/package/demo-video-maker)
+[![Node.js CI](https://github.com/lanemc/demo-video-maker/workflows/Node.js%20CI/badge.svg)](https://github.com/lanemc/demo-video-maker/actions)
+[![Security Rating](https://img.shields.io/badge/security-A+-green.svg)](https://github.com/lanemc/demo-video-maker/security)
 
 Transform your web application into professional demo videos with cinematic mouse movements, dynamic camera following, zoom effects, and gorgeous visual polish. Perfect for product launches, feature demonstrations, marketing materials, and investor presentations.
 
@@ -27,7 +27,7 @@ Transform your web application into professional demo videos with cinematic mous
 
 ```bash
 # Install globally for use in any project
-npm install -g demo-video-automation
+npm install -g demo-video-maker
 
 # Navigate to your project directory
 cd /path/to/your/webapp
@@ -46,7 +46,7 @@ cinematic-demo
 
 ```bash
 # Add to your project
-npm install --save-dev demo-video-automation
+npm install --save-dev demo-video-maker
 
 # Add to package.json scripts
 {
@@ -85,7 +85,7 @@ npm run demo
 
 ## 📖 Configuration Guide
 
-Demo Video Automation uses `demo.json` files to define interactive demonstrations. Place these files anywhere in your project to create targeted demos.
+Demo Video Maker uses `demo.json` files to define interactive demonstrations. Place these files anywhere in your project to create targeted demos.
 
 ### Basic Configuration Structure
 
@@ -535,7 +535,7 @@ cinematic-demo --viewport 1280x720
     "demo:record": "next build && next start & wait-on http://localhost:3000 && cinematic-demo && kill %1"
   },
   "devDependencies": {
-    "demo-video-automation": "^1.0.0",
+    "demo-video-maker": "^1.0.0",
     "concurrently": "^7.6.0",
     "wait-on": "^7.0.1"
   }
@@ -650,7 +650,7 @@ jobs:
         run: npm ci
         
       - name: Install demo video automation
-        run: npm install -g demo-video-automation
+        run: npm install -g demo-video-maker
         
       - name: Build application
         run: npm run build
@@ -698,7 +698,7 @@ COPY package*.json ./
 RUN npm ci
 
 # Install demo video automation
-RUN npm install -g demo-video-automation
+RUN npm install -g demo-video-maker
 
 COPY . .
 RUN npm run build
@@ -768,7 +768,7 @@ cinematic-demo . http://localhost:3000  # Adjust port as needed
 
 ```bash
 # Enable verbose logging
-DEBUG=demo-video-automation cinematic-demo
+DEBUG=demo-video-maker cinematic-demo
 
 # Keep browser open for inspection
 cinematic-demo --headed --no-close
@@ -857,8 +857,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone the repository
-git clone https://github.com/demo-video-automation/cinematic-demos.git
-cd cinematic-demos
+git clone https://github.com/lanemc/demo-video-maker.git
+cd demo-video-maker
 
 # Install dependencies
 npm install
@@ -901,11 +901,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-- 📖 [Documentation](https://github.com/demo-video-automation/cinematic-demos/wiki)
-- 🐛 [Issue Tracker](https://github.com/demo-video-automation/cinematic-demos/issues)
-- 💬 [Discussions](https://github.com/demo-video-automation/cinematic-demos/discussions)
-- 📧 [Email Support](mailto:support@demo-video-automation.com)
+- 📖 [Documentation](https://github.com/lanemc/demo-video-maker/wiki)
+- 🐛 [Issue Tracker](https://github.com/lanemc/demo-video-maker/issues)
+- 💬 [Discussions](https://github.com/lanemc/demo-video-maker/discussions)
+- 📧 [Email Support](mailto:support@demo-video-maker.com)
 
 ---
 
-Made with ❤️ by the Demo Video Automation team
+Made with ❤️ by the Demo Video Maker team

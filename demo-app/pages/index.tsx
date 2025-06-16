@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <Layout>
       <div className="page-header">
-        <h1>Welcome to Demo Video Automation</h1>
+        <h1>Welcome to Demo Video Maker</h1>
         <p>This demo app showcases various features for automated testing and video generation</p>
       </div>
 
