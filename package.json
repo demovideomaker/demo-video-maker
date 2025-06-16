@@ -18,11 +18,19 @@
     "video",
     "automation",
     "playwright",
-    "documentation"
+    "documentation",
+    "cinematic",
+    "screen-recording",
+    "browser-automation", 
+    "presentation",
+    "marketing",
+    "visual-effects",
+    "camera-follow",
+    "zoom-effects"
   ],
   "author": "",
-  "license": "ISC",
-  "description": "Cinematic demo video creation tool with camera follow, zoom, and mouse highlight effects",
+  "license": "MIT",
+  "description": "🎬 Create stunning cinematic demo videos automatically from your web applications with dynamic camera following, zoom effects, and gorgeous visual polish",
   "dependencies": {
     "@playwright/test": "^1.53.0"
   },
