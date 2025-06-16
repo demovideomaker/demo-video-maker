@@ -7,6 +7,7 @@
 const { chromium } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
+const ConfigLoader = require('./lib/configLoader');
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════╗
@@ -18,13 +19,49 @@ console.log(`
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
+// Get command line arguments
+const args = process.argv.slice(2);
+const projectPath = args[0] || process.cwd();
+const baseUrl = args[1] || 'http://localhost:3003';
+
+// Initialize configuration loader
+const configLoader = new ConfigLoader();
+
 const outputDir = path.join(process.cwd(), 'demo-output-cinematic');
 const videosDir = path.join(outputDir, 'videos');
 if (!fs.existsSync(videosDir)) {
   fs.mkdirSync(videosDir, { recursive: true });
 }
 
-async function createCinematicDemo() {
+async function createConfigDrivenDemo() {
+  console.log('\n🔍 Searching for demo.json configurations...\n');
+  
+  // Find all demo.json files in the project
+  const configs = configLoader.findAllConfigs(projectPath);
+  
+  if (configs.length === 0) {
+    console.log('❌ No demo.json files found. Creating sample configuration...');
+    const samplePath = path.join(projectPath, 'demo.json');
+    configLoader.generateSampleConfig(samplePath);
+    console.log('\n✅ Sample demo.json created. Please customize it and run again.');
+    return;
+  }
+  
+  console.log(`✅ Found ${configs.length} demo configuration(s):`);
+  configs.forEach((cfg, index) => {
+    console.log(`   ${index + 1}. ${cfg.config.name} (${path.relative(projectPath, cfg.path)})`);
+  });
+  
+  // Process each configuration
+  for (let i = 0; i < configs.length; i++) {
+    const { config, path: configPath } = configs[i];
+    console.log(`\n🎬 Creating demo for: ${config.name}`);
+    
+    await createDemoFromConfig(config, configPath);
+  }
+}
+
+async function createDemoFromConfig(config, configPath) {
   const browser = await chromium.launch({
     headless: false,
     args: [
@@ -506,106 +543,178 @@ async function createCinematicDemo() {
     await cinematicMove(centerX, centerY, 500);
   }
   
+  // Configuration-driven interaction executor
+  async function executeInteraction(interaction, index) {
+    const stepPrefix = `   Step ${index + 1}:`;
+    
+    try {
+      // Wait before moving cursor
+      if (interaction.waitBeforeMove) {
+        await page.waitForTimeout(interaction.waitBeforeMove);
+      }
+      
+      switch (interaction.type) {
+        case 'click':
+          console.log(`${stepPrefix} Clicking ${interaction.selector}`);
+          const success = await cinematicClick(
+            interaction.selector, 
+            interaction.description || `Click ${interaction.selector}`,
+            { zoom: interaction.zoomLevel || config.effects.zoomLevel }
+          );
+          if (!success && !interaction.skipIfNotFound) {
+            throw new Error(`Element not found: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'hover':
+          console.log(`${stepPrefix} Hovering ${interaction.selector}`);
+          try {
+            const element = await page.locator(interaction.selector).first();
+            const box = await element.boundingBox();
+            if (box) {
+              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
+              await page.evaluate((selector) => {
+                const el = document.querySelector(selector);
+                if (el) window.cinematicControl?.highlightElement(el);
+              }, interaction.selector);
+            } else if (!interaction.skipIfNotFound) {
+              throw new Error(`Element not found: ${interaction.selector}`);
+            }
+          } catch (error) {
+            if (!interaction.skipIfNotFound) throw error;
+            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'type':
+          console.log(`${stepPrefix} Typing "${interaction.text}" in ${interaction.selector}`);
+          const typeSuccess = await cinematicType(
+            interaction.selector,
+            interaction.text,
+            interaction.description || `Type in ${interaction.selector}`
+          );
+          if (!typeSuccess && !interaction.skipIfNotFound) {
+            throw new Error(`Element not found: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'scroll':
+          console.log(`${stepPrefix} Scrolling to ${interaction.selector}`);
+          try {
+            const element = await page.locator(interaction.selector).first();
+            await element.scrollIntoView({ behavior: 'smooth' });
+            const box = await element.boundingBox();
+            if (box) {
+              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
+            }
+          } catch (error) {
+            if (!interaction.skipIfNotFound) throw error;
+            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'wait':
+          const waitTime = interaction.waitTime || 2000;
+          console.log(`${stepPrefix} Waiting ${waitTime}ms`);
+          await page.waitForTimeout(waitTime);
+          break;
+          
+        case 'navigate':
+          console.log(`${stepPrefix} Navigating to ${interaction.url}`);
+          await page.goto(baseUrl + interaction.url, { waitUntil: 'networkidle' });
+          await page.waitForTimeout(config.timings.pageLoadWait);
+          break;
+          
+        default:
+          console.warn(`⚠️  ${stepPrefix} Unknown interaction type: ${interaction.type}`);
+      }
+      
+      // Wait after action
+      if (interaction.waitAfterClick) {
+        await page.waitForTimeout(interaction.waitAfterClick);
+      }
+      
+      // Wait between steps
+      await page.waitForTimeout(config.timings.waitBetweenSteps);
+      
+    } catch (error) {
+      console.error(`❌ ${stepPrefix} Error:`, error.message);
+      if (!config.recording.skipErrors) {
+        throw error;
+      }
+    }
+  }
+
   // Start the demo
   try {
-    await page.goto('http://localhost:3002', { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2000);
+    // Navigate to entry point
+    const entryUrl = config.entry.url ? baseUrl + config.entry.url : baseUrl;
+    console.log(`🌐 Navigating to: ${entryUrl}`);
+    await page.goto(entryUrl, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
     
-    console.log('🎬 Scene 1: Welcome');
+    console.log(`🎬 Starting demo: ${config.name}`);
+    if (config.description) {
+      console.log(`📝 ${config.description}`);
+    }
     
-    // Initialize position and enable camera follow immediately
-    await page.evaluate(() => {
+    // Initialize position and configure effects
+    await page.evaluate((effects) => {
       if (window.cinematicControl) {
         window.cinematicControl.moveCursor(960, 200);
-        window.cinematicControl.enableCameraFollow(true, 2.0);
+        if (effects.cameraFollow) {
+          window.cinematicControl.enableCameraFollow(true, effects.zoomLevel);
+        }
       }
-    });
+    }, config.effects);
     
-    // Opening sequence
-    await drawAttentionPattern();
-    await page.waitForTimeout(1000);
-    
-    console.log('📷 Camera follow mode already activated');
-    
-    console.log('\n🎬 Scene 2: Dashboard Navigation');
-    
-    // Click dashboard with zoom
-    await cinematicClick(
-      '[data-testid="quick-action-dashboard"], [href="/dashboard"]',
-      'Opening Dashboard',
-      { zoom: 1.8 }
-    );
-    
-    await page.waitForTimeout(2000);
-    
-    // Check if on dashboard
-    const dashboardElements = await page.$$('[data-testid*="stat"], [class*="card"]');
-    if (dashboardElements.length > 0) {
-      console.log('\n🎬 Scene 3: Dashboard Exploration');
-      
-      // Pan across dashboard elements
-      for (let i = 0; i < Math.min(3, dashboardElements.length); i++) {
-        const box = await dashboardElements[i].boundingBox();
+    // Optional entry point interaction
+    if (config.entry.selector) {
+      console.log(`🎯 Focusing on entry point: ${config.entry.selector}`);
+      try {
+        const element = await page.locator(config.entry.selector).first();
+        const box = await element.boundingBox();
         if (box) {
-          console.log(`   → Examining dashboard element ${i + 1}`);
-          
-          // Zoom to element
-          await page.evaluate(({ x, y }) => {
-            if (window.cinematicControl) {
-              window.cinematicControl.zoomTo(1.5, x, y, 600);
-            }
-          }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
-          
-          await cinematicMove(box.x + box.width / 2, box.y + box.height / 2, 800);
-          await page.waitForTimeout(1200);
+          await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
+          await page.evaluate((selector) => {
+            const el = document.querySelector(selector);
+            if (el) window.cinematicControl?.highlightElement(el);
+          }, config.entry.selector);
         }
+      } catch (error) {
+        console.warn(`⚠️  Entry point not found: ${config.entry.selector}`);
       }
-      
-      // Reset zoom
-      await page.evaluate(() => {
-        if (window.cinematicControl) {
-          window.cinematicControl.resetZoom(1000);
-        }
-      });
+    }
+    
+    // Opening attention pattern (optional)
+    if (config.interactions.length > 0) {
+      console.log('✨ Drawing opening attention pattern');
+      await drawAttentionPattern();
       await page.waitForTimeout(1000);
     }
     
-    console.log('\n🎬 Scene 4: Feature Interaction');
+    // Execute configured interactions
+    console.log(`\n🎬 Executing ${config.interactions.length} interaction(s):`);
+    for (let i = 0; i < config.interactions.length; i++) {
+      await executeInteraction(config.interactions[i], i);
+    }
     
-    // Try refresh button with dramatic zoom
-    await cinematicClick(
-      '[data-testid="refresh-dashboard"], button:has-text("Refresh")',
-      'Refreshing data',
-      { zoom: 2.2 }
-    );
+    // Final flourish (optional closing pattern)
+    if (config.interactions.length > 0) {
+      console.log('\n🎬 Final Scene: Closing');
+      await drawAttentionPattern();
+      
+      // Fade out effect
+      await page.evaluate(() => {
+        if (window.cinematicControl) {
+          window.cinematicControl.zoomTo(0.8, 960, 540, 2000);
+        }
+      });
+      
+      await page.waitForTimeout(2500);
+    }
     
-    await page.waitForTimeout(1500);
-    
-    console.log('\n🎬 Scene 5: Navigation Menu');
-    
-    // Navigate to analytics with smooth camera pan
-    await cinematicClick(
-      '[data-testid="nav-analytics"], [href="/analytics"]',
-      'Navigating to Analytics',
-      { zoom: 1.5 }
-    );
-    
-    await page.waitForTimeout(2000);
-    
-    // Final flourish
-    console.log('\n🎬 Final Scene: Closing');
-    await drawAttentionPattern();
-    
-    // Fade out effect
-    await page.evaluate(() => {
-      if (window.cinematicControl) {
-        window.cinematicControl.zoomTo(0.8, 960, 540, 2000);
-      }
-    });
-    
-    await page.waitForTimeout(2500);
-    
-    console.log('\n✅ Cinematic demo complete!');
+    console.log(`\n✅ Demo "${config.name}" complete!`);
     
   } catch (error) {
     console.error('\n❌ Error during demo:', error.message);
@@ -628,7 +737,10 @@ async function createCinematicDemo() {
     )[0];
     
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-    const finalName = `cinematic-demo-${timestamp}.webm`;
+    const baseName = config.recording.outputName || 
+                     config.name.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
+                     'demo';
+    const finalName = `${baseName}-${timestamp}.webm`;
     
     fs.renameSync(
       path.join(videosDir, latest),
@@ -637,33 +749,32 @@ async function createCinematicDemo() {
     
     console.log(`\n🎥 Video saved as: ${finalName}`);
     console.log(`📁 Location: ${videosDir}`);
+    
+    return finalName;
   }
   
-  console.log('\n✨ Cinematic demo generation complete!');
-  console.log('\n🎬 Professional effects included:');
-  console.log('   • Glowing mouse cursor with pulse effect');
-  console.log('   • Dynamic zoom in/out on interactions');
-  console.log('   • Smooth camera panning following mouse');
-  console.log('   • Spotlight effect highlighting cursor area');
-  console.log('   • Element highlighting on focus');
-  console.log('   • Professional click animations');
-  console.log('   • Cinematic transitions between scenes');
-  console.log('\n🎯 Perfect for:');
-  console.log('   • Product launch videos');
-  console.log('   • Feature demonstrations');
-  console.log('   • Marketing materials');
-  console.log('   • Investor presentations');
-  console.log('   • Professional documentation');
+  return null;
 }
 
-// Check if demo app is running
+// Check if demo app is running  
 const http = require('http');
-http.get('http://localhost:3002', (res) => {
+http.get(baseUrl, (res) => {
   if (res.statusCode === 200 || res.statusCode === 404) {
     console.log('✅ Demo app detected\n');
-    createCinematicDemo().catch(console.error);
+    createConfigDrivenDemo().then(() => {
+      console.log('\n✨ All demos completed!');
+      console.log('\n🎬 Professional effects included:');
+      console.log('   • Configuration-driven interactions');
+      console.log('   • Glowing mouse cursor with pulse effect');
+      console.log('   • Dynamic zoom in/out on interactions');
+      console.log('   • Smooth camera panning following mouse');
+      console.log('   • Spotlight effect highlighting cursor area');
+      console.log('   • Element highlighting on focus');
+      console.log('   • Professional click animations');
+      console.log('   • Cinematic transitions between scenes');
+    }).catch(console.error);
   }
 }).on('error', () => {
-  console.error('\n❌ Demo app is not running');
-  console.error('   Please start it with: cd demo-app && npm run dev\n');
+  console.error(`\n❌ Demo app is not running on ${baseUrl}`);
+  console.error('   Please start it with: npm run start-demo-app\n');
 });

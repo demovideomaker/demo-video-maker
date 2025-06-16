@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "main": "demo-cinematic.js",
   "bin": {
-    "demo-video": "./demo-cinematic.js"
+    "demo-video": "./demo-cinematic.js",
+    "cinematic-demo": "./demo-cinematic.js"
   },
   "scripts": {
     "demo": "node demo-cinematic.js",
-    "start-demo-app": "cd demo-app && npm run dev"
+    "start-demo-app": "cd demo-app && npm run dev",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "generate-sample": "node -e \"const ConfigLoader = require('./lib/configLoader'); new ConfigLoader().generateSampleConfig('./demo.json');\""
   },
   "keywords": [
     "demo",
@@ -21,5 +25,22 @@
   "description": "Cinematic demo video creation tool with camera follow, zoom, and mouse highlight effects",
   "dependencies": {
     "@playwright/test": "^1.53.0"
-  }
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "files": [
+    "demo-cinematic.js",
+    "lib/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demo-video-automation/cinematic-demos"
+  },
+  "preferGlobal": true
 }
