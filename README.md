@@ -649,7 +649,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Install demo video automation
+      - name: Install demo video maker
         run: npm install -g demo-video-maker
         
       - name: Build application
@@ -697,7 +697,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Install demo video automation
+# Install demo video maker
 RUN npm install -g demo-video-maker
 
 COPY . .
