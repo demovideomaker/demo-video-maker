@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "demo-cinematic.js",
   "bin": {
-    "demo-video": "./demo-cinematic.js",
-    "cinematic-demo": "./demo-cinematic.js"
+    "demo-video": "demo-cinematic.js",
+    "cinematic-demo": "demo-cinematic.js"
   },
   "scripts": {
     "demo": "node demo-cinematic.js",
@@ -21,7 +21,7 @@
     "documentation",
     "cinematic",
     "screen-recording",
-    "browser-automation", 
+    "browser-automation",
     "presentation",
     "marketing",
     "visual-effects",
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lanemc/demo-video-maker"
+    "url": "git+https://github.com/lanemc/demo-video-maker.git"
   },
   "preferGlobal": true
 }
