@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lanemc/demo-video-maker.git"
+    "url": "git+https://github.com/demovideomaker/demo-video-maker.git"
   },
   "preferGlobal": true
 }

@@ -3,8 +3,8 @@
 **Create stunning cinematic demo videos automatically from your web applications**
 
 [![npm version](https://badge.fury.io/js/demo-video-maker.svg)](https://www.npmjs.com/package/demo-video-maker)
-[![Node.js CI](https://github.com/lanemc/demo-video-maker/workflows/Node.js%20CI/badge.svg)](https://github.com/lanemc/demo-video-maker/actions)
-[![Security Rating](https://img.shields.io/badge/security-A+-green.svg)](https://github.com/lanemc/demo-video-maker/security)
+[![Node.js CI](https://github.com/demovideomaker/demo-video-maker/workflows/Node.js%20CI/badge.svg)](https://github.com/demovideomaker/demo-video-maker/actions)
+[![Security Rating](https://img.shields.io/badge/security-A+-green.svg)](https://github.com/demovideomaker/demo-video-maker/security)
 
 Transform your web application into professional demo videos with cinematic mouse movements, dynamic camera following, zoom effects, and gorgeous visual polish. Perfect for product launches, feature demonstrations, marketing materials, and investor presentations.
 
@@ -857,7 +857,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone the repository
-git clone https://github.com/lanemc/demo-video-maker.git
+git clone https://github.com/demovideomaker/demo-video-maker.git
 cd demo-video-maker
 
 # Install dependencies
@@ -901,9 +901,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-- 📖 [Documentation](https://github.com/lanemc/demo-video-maker/wiki)
-- 🐛 [Issue Tracker](https://github.com/lanemc/demo-video-maker/issues)
-- 💬 [Discussions](https://github.com/lanemc/demo-video-maker/discussions)
+- 📖 [Documentation](https://github.com/demovideomaker/demo-video-maker/wiki)
+- 🐛 [Issue Tracker](https://github.com/demovideomaker/demo-video-maker/issues)
+- 💬 [Discussions](https://github.com/demovideomaker/demo-video-maker/discussions)
 - 📧 [Email Support](mailto:support@demo-video-maker.com)
 
 ---
