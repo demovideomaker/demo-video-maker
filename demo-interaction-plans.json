@@ -1,0 +1,172 @@
+{
+  "Home": {
+    "page": "Home",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-home\"]",
+        "description": "Click Home"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-dashboard\"]",
+        "description": "Click Dashboard"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-analytics\"]",
+        "description": "Click Analytics"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-users\"]",
+        "description": "Click User Management"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-settings\"]",
+        "description": "Click Settings"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"quick-action-dashboard\"]",
+        "description": "Click View Dashboard"
+      }
+    ]
+  },
+  "Dashboard": {
+    "page": "Dashboard",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[data-testid=\"refresh-dashboard\"]",
+        "description": "Click Refresh Data"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"export-data\"]",
+        "description": "Click Export Data"
+      },
+      {
+        "action": "type",
+        "selector": "[data-testid=\"time-range-selector\"]",
+        "value": "Sample text",
+        "description": "Fill in null"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"chart-fullscreen\"]",
+        "description": "Click View Fullscreen"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"view-all-activity\"]",
+        "description": "Click View All Activity"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"generate-report\"]",
+        "description": "Click Generate Report"
+      }
+    ]
+  },
+  "Analytics": {
+    "page": "Analytics",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[data-testid=\"export-csv\"]",
+        "description": "Click Export to CSV"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"export-pdf\"]",
+        "description": "Click Export to PDF"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"metric-pageviews\"]",
+        "description": "Click Pageviews"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"metric-users\"]",
+        "description": "Click Users"
+      }
+    ]
+  },
+  "Users": {
+    "page": "Users",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[data-testid=\"clear-filters\"]",
+        "description": "Click Clear Filters"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"add-user-button\"]",
+        "description": "Click Add New User"
+      },
+      {
+        "action": "type",
+        "selector": "[data-testid=\"user-search\"]",
+        "value": "demo@example.com",
+        "description": "Fill in Search by name or email..."
+      },
+      {
+        "action": "type",
+        "selector": "[data-testid=\"filter-status\"]",
+        "value": "Sample text",
+        "description": "Fill in null"
+      },
+      {
+        "action": "type",
+        "selector": "[data-testid=\"filter-role\"]",
+        "value": "Sample text",
+        "description": "Fill in null"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"edit-user-1\"]",
+        "description": "Click Edit"
+      }
+    ]
+  },
+  "Settings": {
+    "page": "Settings",
+    "steps": [
+      {
+        "action": "click",
+        "selector": "[data-testid=\"save-general-settings\"]",
+        "description": "Click Save Changes"
+      },
+      {
+        "action": "type",
+        "selector": "[data-testid=\"app-name-input\"]",
+        "value": "Sample text",
+        "description": "Fill in text"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"tab-general\"]",
+        "description": "Click General"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"tab-notifications\"]",
+        "description": "Click Notifications"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"tab-security\"]",
+        "description": "Click Security"
+      },
+      {
+        "action": "click",
+        "selector": "[data-testid=\"nav-home\"]",
+        "description": "Click Home"
+      }
+    ]
+  }
+}

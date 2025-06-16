@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+demo-output/
+*.log
+.DS_Store
+coverage/
+.vscode/
+.idea/
+*.webm
+*.mp4
+*.avi
+.playwright/
+test-results/
+playwright-report/

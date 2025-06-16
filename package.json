@@ -1,0 +1,51 @@
+{
+  "name": "demo-video-automation",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "bin": {
+    "demo-video": "./bin/demo-video.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "demo": "tsx src/index.ts",
+    "setup": "tsx src/setup/index.ts",
+    "setup:monitor": "tsx src/setup/index.ts --monitor",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "lint": "echo 'Linting coming soon'",
+    "typecheck": "tsc --noEmit",
+    "quick-test": "node test-quick.js",
+    "demo-simple": "tsx src/analyzers/codebaseAnalyzer.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "demo",
+    "video",
+    "automation",
+    "playwright",
+    "documentation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "Automated demo video creation tool that analyzes codebases and generates feature demonstrations",
+  "devDependencies": {
+    "@babel/parser": "^7.27.5",
+    "@babel/traverse": "^7.27.4",
+    "@playwright/test": "^1.53.0",
+    "@types/babel__traverse": "^7.20.7",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^24.0.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1"
+  }
+}
