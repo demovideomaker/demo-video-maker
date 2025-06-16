@@ -1,0 +1,75 @@
+{
+  "name": "User Management Demo",
+  "description": "Shows user table interactions and management features",
+  "entry": {
+    "url": "/users",
+    "selector": "[data-testid='user-table'], .main-content",
+    "waitTime": 2500
+  },
+  "interactions": [
+    {
+      "type": "click",
+      "selector": "[data-testid='nav-users'], [href='/users']",
+      "waitBeforeMove": 1000,
+      "waitAfterClick": 2500,
+      "zoomLevel": 1.4,
+      "description": "Navigate to user management"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='user-table'] tr:first-child, .table tbody tr:first-child",
+      "waitBeforeMove": 800,
+      "waitAfterClick": 1200,
+      "zoomLevel": 1.6,
+      "skipIfNotFound": true,
+      "description": "Examine first user row"
+    },
+    {
+      "type": "click",
+      "selector": "[data-testid='add-user'], .btn:contains('Add'), button:contains('New')",
+      "waitBeforeMove": 1200,
+      "waitAfterClick": 2000,
+      "zoomLevel": 2.0,
+      "skipIfNotFound": true,
+      "description": "Click add user button"
+    },
+    {
+      "type": "type",
+      "selector": "[data-testid='search-users'], input[placeholder*='search'], input[type='search']",
+      "text": "john doe",
+      "waitBeforeMove": 800,
+      "waitAfterClick": 1800,
+      "zoomLevel": 1.8,
+      "skipIfNotFound": true,
+      "description": "Search for users"
+    },
+    {
+      "type": "click",
+      "selector": "[data-testid='user-actions'], .dropdown, .menu-button",
+      "waitBeforeMove": 1000,
+      "waitAfterClick": 1500,
+      "zoomLevel": 1.9,
+      "skipIfNotFound": true,
+      "description": "Open user actions menu"
+    }
+  ],
+  "effects": {
+    "cameraFollow": true,
+    "zoomLevel": 1.6,
+    "glowEffects": true,
+    "clickAnimations": true,
+    "mouseMoveSpeed": 60,
+    "spotlightEffect": true
+  },
+  "recording": {
+    "duration": 40000,
+    "skipErrors": true,
+    "outputName": "user-management-feature"
+  },
+  "timings": {
+    "waitBeforeMove": 1000,
+    "waitAfterClick": 1600,
+    "waitBetweenSteps": 900,
+    "pageLoadWait": 2500
+  }
+}

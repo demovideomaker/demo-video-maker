@@ -1,0 +1,63 @@
+{
+  "name": "Dashboard Feature Demo",
+  "description": "Demonstrates the main dashboard functionality with stats and charts",
+  "entry": {
+    "url": "/dashboard",
+    "selector": "[data-testid='dashboard-container'], .main-content",
+    "waitTime": 2500
+  },
+  "interactions": [
+    {
+      "type": "hover",
+      "selector": "[data-testid='quick-stats-users']",
+      "waitBeforeMove": 800,
+      "waitAfterClick": 1200,
+      "zoomLevel": 1.8,
+      "description": "Hover over user statistics card"
+    },
+    {
+      "type": "click",
+      "selector": "[data-testid='quick-stats-revenue']",
+      "waitBeforeMove": 1000,
+      "waitAfterClick": 1500,
+      "zoomLevel": 2.0,
+      "description": "Click on revenue statistics"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='quick-stats-orders']",
+      "waitBeforeMove": 800,
+      "waitAfterClick": 1200,
+      "zoomLevel": 1.8,
+      "description": "Hover over orders statistics"
+    },
+    {
+      "type": "click",
+      "selector": "[data-testid='quick-action-dashboard'], .btn-primary",
+      "waitBeforeMove": 1200,
+      "waitAfterClick": 2000,
+      "zoomLevel": 1.6,
+      "skipIfNotFound": true,
+      "description": "Click primary action button if available"
+    }
+  ],
+  "effects": {
+    "cameraFollow": true,
+    "zoomLevel": 1.6,
+    "glowEffects": true,
+    "clickAnimations": true,
+    "mouseMoveSpeed": 60,
+    "spotlightEffect": true
+  },
+  "recording": {
+    "duration": 25000,
+    "skipErrors": true,
+    "outputName": "dashboard-feature"
+  },
+  "timings": {
+    "waitBeforeMove": 1000,
+    "waitAfterClick": 1500,
+    "waitBetweenSteps": 800,
+    "pageLoadWait": 2500
+  }
+}
