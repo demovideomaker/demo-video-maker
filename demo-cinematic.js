@@ -19,11 +19,73 @@ console.log(`
 ╚═══════════════════════════════════════════════════════════╝
 `);
 
-// Get and validate command line arguments
-const args = process.argv.slice(2);
+// Parse command line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const parsed = {
+    init: false,
+    port: 3003,
+    projectPath: null,
+    baseUrl: null,
+    help: false
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    
+    if (arg === '--init') {
+      parsed.init = true;
+    } else if (arg === '--port' || arg === '-p') {
+      const portValue = args[i + 1];
+      if (portValue && !portValue.startsWith('-')) {
+        const port = parseInt(portValue, 10);
+        if (port > 0 && port < 65536) {
+          parsed.port = port;
+          i++; // skip next arg as it's the port value
+        } else {
+          console.warn('⚠️  Invalid port number, using default 3003');
+        }
+      } else {
+        console.warn('⚠️  Port flag requires a value, using default 3003');
+      }
+    } else if (arg === '--help' || arg === '-h') {
+      parsed.help = true;
+    } else if (!arg.startsWith('-')) {
+      // Positional arguments
+      if (!parsed.projectPath) {
+        parsed.projectPath = arg;
+      } else if (!parsed.baseUrl) {
+        parsed.baseUrl = arg;
+      }
+    }
+  }
+
+  return parsed;
+}
+
+const cliArgs = parseArgs();
+
+// Handle --help flag
+if (cliArgs.help) {
+  console.log(`
+Usage: cinematic-demo [options] [project-path] [base-url]
+
+Options:
+  --init              Create a sample demo.json configuration file
+  --port, -p <port>   Port number where your app is running (default: 3003)
+  --help, -h          Show this help message
+
+Examples:
+  cinematic-demo --init                    # Create sample config
+  cinematic-demo --port 3000               # Run demo on port 3000
+  cinematic-demo -p 8080 ./my-app          # Custom port and project path
+  cinematic-demo ./project http://localhost:4000  # Full custom setup
+`);
+  process.exit(0);
+}
 
 // Handle --init flag
-if (args.includes('--init')) {
+if (cliArgs.init) {
   console.log('🔧 Creating sample configuration...\n');
   const samplePath = path.join(process.cwd(), 'demo.json');
   const configLoader = new ConfigLoader();
@@ -51,31 +113,31 @@ function validateProjectPath(inputPath) {
   }
 }
 
-function validateBaseUrl(inputUrl) {
-  if (!inputUrl) return 'http://localhost:3003';
+function validateBaseUrl(inputUrl, defaultPort = 3003) {
+  if (!inputUrl) return `http://localhost:${defaultPort}`;
   
   try {
     const url = new URL(inputUrl);
     if (!['http:', 'https:'].includes(url.protocol)) {
       console.warn('⚠️  Invalid protocol, using default URL');
-      return 'http://localhost:3003';
+      return `http://localhost:${defaultPort}`;
     }
     
     // Prevent localhost bypass attacks
     if (url.hostname !== 'localhost' && url.hostname !== '127.0.0.1' && !url.hostname.startsWith('192.168.')) {
       console.warn('⚠️  Only localhost and local IPs allowed');
-      return 'http://localhost:3003';
+      return `http://localhost:${defaultPort}`;
     }
     
     return url.toString();
   } catch {
     console.warn('⚠️  Invalid URL format, using default');
-    return 'http://localhost:3003';
+    return `http://localhost:${defaultPort}`;
   }
 }
 
-const projectPath = validateProjectPath(args[0]);
-const baseUrl = validateBaseUrl(args[1]);
+const projectPath = validateProjectPath(cliArgs.projectPath);
+const baseUrl = validateBaseUrl(cliArgs.baseUrl, cliArgs.port);
 
 // Initialize configuration loader
 const configLoader = new ConfigLoader();
