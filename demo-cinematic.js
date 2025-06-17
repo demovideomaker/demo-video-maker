@@ -68,7 +68,7 @@ const cliArgs = parseArgs();
 // Handle --help flag
 if (cliArgs.help) {
   console.log(`
-Usage: cinematic-demo [options] [project-path] [base-url]
+Usage: demo-video-maker [options] [project-path] [base-url]
 
 Options:
   --init              Create a sample demo.json configuration file
@@ -76,10 +76,10 @@ Options:
   --help, -h          Show this help message
 
 Examples:
-  cinematic-demo --init                    # Create sample config
-  cinematic-demo --port 3000               # Run demo on port 3000
-  cinematic-demo -p 8080 ./my-app          # Custom port and project path
-  cinematic-demo ./project http://localhost:4000  # Full custom setup
+  demo-video-maker --init                    # Create sample config
+  demo-video-maker --port 3000               # Run demo on port 3000
+  demo-video-maker -p 8080 ./my-app          # Custom port and project path
+  demo-video-maker ./project http://localhost:4000  # Full custom setup
 `);
   process.exit(0);
 }

@@ -1,10 +1,10 @@
 {
   "name": "demo-video-maker",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "main": "demo-cinematic.js",
   "bin": {
-    "demo-video": "demo-cinematic.js",
-    "cinematic-demo": "demo-cinematic.js"
+    "demo-video-maker": "demo-cinematic.js",
+    "demo-video": "demo-cinematic.js"
   },
   "scripts": {
     "demo": "node demo-cinematic.js",
@@ -17,7 +17,8 @@
     "test:all": "npm test && npm run test:cli",
     "build": "mkdir -p dist && cp demo-cinematic.js dist/ && cp -r lib dist/",
     "prepublishOnly": "npm run test:all && npm run build",
-    "generate-sample": "node -e \"const ConfigLoader = require('./lib/configLoader'); new ConfigLoader().generateSampleConfig('./demo.json');\""
+    "generate-sample": "node -e \"const ConfigLoader = require('./lib/configLoader'); new ConfigLoader().generateSampleConfig('./demo.json');\"",
+    "demo:init": "node demo-cinematic.js --init"
   },
   "keywords": [
     "demo",

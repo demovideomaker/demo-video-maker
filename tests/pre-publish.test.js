@@ -79,8 +79,8 @@ describe('Pre-publish Package Tests', () => {
       expect(fs.existsSync(binPath)).toBe(true);
     });
 
-    it('should install cinematic-demo command globally', () => {
-      const binPath = getBinPath('cinematic-demo');
+    it('should install demo-video-maker command globally', () => {
+      const binPath = getBinPath('demo-video-maker');
       expect(fs.existsSync(binPath)).toBe(true);
     });
 
@@ -94,8 +94,8 @@ describe('Pre-publish Package Tests', () => {
       expect(result).not.toContain('Cannot find module');
     });
 
-    it('should run cinematic-demo --help without errors', () => {
-      const binPath = getBinPath('cinematic-demo');
+    it('should run demo-video-maker --help without errors', () => {
+      const binPath = getBinPath('demo-video-maker');
       const result = execSync(`${binPath} --help`, { encoding: 'utf8' });
       
       expect(result).toContain('Cinematic Demo Generator');
@@ -188,7 +188,7 @@ describe('Pre-publish Package Tests', () => {
       
       expect(packageJson.bin).toBeDefined();
       expect(packageJson.bin['demo-video']).toBe('demo-cinematic.js');
-      expect(packageJson.bin['cinematic-demo']).toBe('demo-cinematic.js');
+      expect(packageJson.bin['demo-video-maker']).toBe('demo-cinematic.js');
     });
 
     it('should have playwright as dependency not @playwright/test', () => {

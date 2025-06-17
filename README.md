@@ -20,48 +20,42 @@ Transform your web application into professional demo videos with cinematic mous
 - 🖱️ **Realistic Interactions**: Click, hover, type, scroll, navigate with natural timing
 - 🚀 **Multiple Demos**: Create separate demos for different features automatically
 - 🛡️ **Enterprise Security**: Path validation, input sanitization, memory management
+- 🎯 **Simple CLI**: Just run `demo-video-maker` in your project directory
 
 ## 🚀 Quick Start
 
-### Global Installation (Recommended)
+### 1. Install the Tool
 
 ```bash
-# Install globally for use in any project
 npm install -g demo-video-maker
+```
 
-# Navigate to your project directory
+### 2. Create Your First Demo
+
+```bash
+# Navigate to your web app
 cd /path/to/your/webapp
 
-# Create a sample configuration
-cinematic-demo --init
+# Generate a sample demo.json
+demo-video-maker --init
 
-# Start your web app (in another terminal)
-npm start # or your app's start command
-
-# Run the demo (will find all demo.json files)
-cinematic-demo
+# Edit demo.json to match your app's elements
 ```
 
-### Local Installation
+### 3. Run the Demo
 
 ```bash
-# Add to your project
-npm install --save-dev demo-video-maker
+# Start your web app (in a separate terminal)
+npm start
 
-# Add to package.json scripts
-{
-  "scripts": {
-    "demo": "cinematic-demo",
-    "demo:init": "cinematic-demo --init"
-  }
-}
+# Generate the demo video
+demo-video-maker
 
-# Generate sample configuration
-npm run demo:init
-
-# Run demos
-npm run demo
+# If your app runs on a different port
+demo-video-maker --port 3000
 ```
+
+That's it! Your demo video will be saved in `demo-output-cinematic-[timestamp]/`
 
 ## 📋 System Requirements
 
@@ -278,9 +272,19 @@ Control video output and recording behavior.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `duration` | number | `30000` | Maximum recording duration in milliseconds |
+| `duration` | number | `30000` | Maximum recording duration in milliseconds (must be positive) |
 | `skipErrors` | boolean | `true` | Continue recording if interactions fail |
 | `outputName` | string | `null` | Custom filename (auto-generated if not specified) |
+
+### 🔒 Security & Validation
+
+All configuration values are validated and sanitized:
+
+- **Selectors**: Checked for XSS patterns (`<script>`, `javascript:`, etc.)
+- **URLs**: Only relative paths or `http(s)://` URLs allowed
+- **Text**: HTML tags and dangerous content removed
+- **Timings**: Must be positive numbers within reasonable bounds
+- **File paths**: Protected against directory traversal attacks
 
 ## 📂 Project Structure & Organization
 
@@ -488,38 +492,36 @@ Create focused demos for different audiences:
 
 ```bash
 # Run all demos in current directory
-cinematic-demo
+demo-video-maker
 
 # Run demos for specific directory
-cinematic-demo ./src/features
+demo-video-maker ./src/features
 
 # Specify custom base URL
-cinematic-demo . http://localhost:8080
+demo-video-maker . http://localhost:8080
 
 # Generate sample configuration
-cinematic-demo --init
+demo-video-maker --init
 
 # Show help
-cinematic-demo --help
+demo-video-maker --help
 ```
 
-### Advanced Options
+### Command Line Options
 
 ```bash
-# Custom output directory
-cinematic-demo --output ./custom-videos
+# Specify custom port (default: 3003)
+demo-video-maker --port 3000
+demo-video-maker -p 8080
 
-# Specific demo file
-cinematic-demo --config ./path/to/demo.json
+# Run for specific directory with custom port
+demo-video-maker --port 3000 ./src/features
 
-# Verbose logging
-cinematic-demo --verbose
+# Use custom base URL (when app runs on different port/host)
+demo-video-maker . http://localhost:8080
 
-# Skip browser installation check
-cinematic-demo --skip-browser-check
-
-# Custom viewport size
-cinematic-demo --viewport 1280x720
+# Full custom setup
+demo-video-maker ./my-app http://localhost:4000
 ```
 
 ## 🛠️ Integration Examples
@@ -531,8 +533,8 @@ cinematic-demo --viewport 1280x720
 {
   "scripts": {
     "dev": "next dev",
-    "demo": "concurrently \"next dev\" \"wait-on http://localhost:3000 && cinematic-demo\"",
-    "demo:record": "next build && next start & wait-on http://localhost:3000 && cinematic-demo && kill %1"
+    "demo": "concurrently \"next dev\" \"wait-on http://localhost:3000 && demo-video-maker\"",
+    "demo:record": "next build && next start & wait-on http://localhost:3000 && demo-video-maker && kill %1"
   },
   "devDependencies": {
     "demo-video-maker": "^1.0.0",
@@ -549,8 +551,8 @@ cinematic-demo --viewport 1280x720
 {
   "scripts": {
     "dev": "vite",
-    "demo": "concurrently \"vite\" \"wait-on http://localhost:5173 && cinematic-demo . http://localhost:5173\"",
-    "demo:ci": "vite build && vite preview & wait-on http://localhost:4173 && cinematic-demo . http://localhost:4173"
+    "demo": "concurrently \"vite\" \"wait-on http://localhost:5173 && demo-video-maker . http://localhost:5173\"",
+    "demo:ci": "vite build && vite preview & wait-on http://localhost:4173 && demo-video-maker . http://localhost:4173"
   }
 }
 ```
@@ -562,7 +564,7 @@ cinematic-demo --viewport 1280x720
 {
   "scripts": {
     "serve": "vue-cli-service serve",
-    "demo": "concurrently \"vue-cli-service serve\" \"wait-on http://localhost:8080 && cinematic-demo . http://localhost:8080\""
+    "demo": "concurrently \"vue-cli-service serve\" \"wait-on http://localhost:8080 && demo-video-maker . http://localhost:8080\""
   }
 }
 ```
@@ -652,23 +654,31 @@ jobs:
       - name: Install demo video maker
         run: npm install -g demo-video-maker
         
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+        
       - name: Build application
         run: npm run build
         
       - name: Start application
         run: npm start &
+        env:
+          PORT: 3000
         
       - name: Wait for application
         run: npx wait-on http://localhost:3000
         
       - name: Generate demo videos
-        run: cinematic-demo
+        run: demo-video-maker --port 3000
+        env:
+          CI: true
+          HEADLESS: true
         
       - name: Upload demo videos
         uses: actions/upload-artifact@v3
         with:
           name: demo-videos
-          path: demo-output-cinematic/videos/
+          path: demo-output-cinematic-*/
 ```
 
 ### Docker Integration
@@ -706,7 +716,7 @@ RUN npm run build
 EXPOSE 3000
 
 # Start app and generate demos
-CMD ["sh", "-c", "npm start & sleep 10 && cinematic-demo"]
+CMD ["sh", "-c", "npm start & sleep 10 && demo-video-maker"]
 ```
 
 ## 🔍 Troubleshooting
@@ -722,7 +732,7 @@ npm start
 curl http://localhost:3000
 
 # Verify the correct port in your command
-cinematic-demo . http://localhost:3000  # Adjust port as needed
+demo-video-maker . http://localhost:3000  # Adjust port as needed
 ```
 
 #### Elements not found during demo
@@ -767,14 +777,17 @@ cinematic-demo . http://localhost:3000  # Adjust port as needed
 ### Debug Mode
 
 ```bash
+# Run in non-headless mode (see browser)
+HEADLESS=false demo-video-maker
+
 # Enable verbose logging
-DEBUG=demo-video-maker cinematic-demo
+DEBUG=* demo-video-maker
 
-# Keep browser open for inspection
-cinematic-demo --headed --no-close
+# Test with specific directory
+demo-video-maker ./src/components/Button
 
-# Generate single demo for testing
-cinematic-demo --config ./src/components/Button/demo.json
+# Test with custom port
+demo-video-maker --port 8080
 ```
 
 ### Performance Optimization

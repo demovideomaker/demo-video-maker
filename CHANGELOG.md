@@ -60,6 +60,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Node.js 18.0.0 or higher
 - All major web frameworks
 
+## [1.0.15] - 2025-06-17
+
+### Added
+- Comprehensive configuration validation for all demo.json options
+- Security validations to prevent XSS and injection attacks
+- Required field validation with helpful error messages
+- Boolean type conversion for effects configuration
+- Recording duration validation
+- Entry configuration validation (selector, waitTime, URL)
+- E2E tests that create actual demo videos
+- Support for CI/CD with headless mode (CI=true or HEADLESS=true)
+
+### Fixed
+- Fixed MODULE_NOT_FOUND error by switching from @playwright/test to playwright
+- Fixed selector validation to return empty string instead of undefined
+- Fixed text sanitization to properly remove script tags and content
+- Fixed boolean conversion to handle null/undefined values
+- Fixed URL validation to return empty string for invalid URLs
+
+### Changed
+- **BREAKING**: Primary CLI command changed from `cinematic-demo` to `demo-video-maker`
+- Improved documentation clarity and alignment with implementation
+- Simplified Quick Start guide for better user experience
+- Updated CLI help examples to match actual implementation
+- Enhanced security validations for all user inputs
+- Better error messages for invalid configurations
+- Added `demo-video` as an alias for backwards compatibility
+
+### Security
+- Added comprehensive input validation for all configuration fields
+- Enhanced XSS prevention in selector and text inputs
+- Improved URL validation to only allow safe protocols
+- Added bounds checking for all numeric values
+- Strengthened sanitization of HTML content
+
+## [1.0.14] - 2025-06-17 (Unreleased)
+
+### Added
+- Initial fixes for MODULE_NOT_FOUND error
+- Comprehensive test suite foundation
+
 ## [Unreleased]
 
 ### Planned
