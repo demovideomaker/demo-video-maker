@@ -212,6 +212,301 @@ async function createDemoFromConfig(config, configPath) {
   let browser = null;
   let context = null;
   let page = null;
+  let mouseX = 960;
+  let mouseY = 540;
+  
+  
+  // Helper functions for cinematic effects with memory management
+  async function cinematicMove(targetX, targetY, duration = 1000) {
+    const steps = 60;
+    const stepDelay = duration / steps;
+    const timeouts = []; // Track timeouts for cleanup
+    
+    try {
+      for (let i = 0; i <= steps; i++) {
+        // Check if page is still alive
+        if (page.isClosed()) {
+          console.warn('⚠️  Page closed during animation, stopping cinematicMove');
+          break;
+        }
+        
+        const progress = i / steps;
+        // Smooth easing curve
+        const ease = progress < 0.5 
+          ? 4 * progress * progress * progress 
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+        
+        const x = mouseX + (targetX - mouseX) * ease;
+        const y = mouseY + (targetY - mouseY) * ease;
+        
+        try {
+          await page.evaluate(({ x, y }) => {
+            if (window.cinematicControl) {
+              window.cinematicControl.moveCursor(x, y);
+              window.cinematicControl.updateCameraFollow();
+            }
+          }, { x, y });
+          
+          await page.mouse.move(x, y);
+          await page.waitForTimeout(stepDelay);
+        } catch (error) {
+          if (error.message.includes('Target page, context or browser has been closed')) {
+            console.warn('⚠️  Browser closed during animation, stopping cinematicMove');
+            break;
+          }
+          throw error;
+        }
+      }
+      
+      mouseX = targetX;
+      mouseY = targetY;
+    } catch (error) {
+      // Clear any pending timeouts on error
+      timeouts.forEach(id => clearTimeout(id));
+      if (!error.message.includes('closed')) {
+        throw error;
+      }
+    }
+  }
+  
+  async function zoomToElement(selector, scale = 2, padding = 50) {
+    try {
+      const element = await page.$(selector);
+      if (element) {
+        const box = await element.boundingBox();
+        if (box) {
+          const centerX = box.x + box.width / 2;
+          const centerY = box.y + box.height / 2;
+          
+          console.log(`   🔍 Zooming to ${selector} (${scale}x)`);
+          
+          await page.evaluate(({ scale, centerX, centerY, selector }) => {
+            const el = document.querySelector(selector);
+            if (window.cinematicControl && el) {
+              window.cinematicControl.highlightElement(el);
+              window.cinematicControl.zoomTo(scale, centerX, centerY);
+            }
+          }, { scale, centerX, centerY, selector });
+          
+          await page.waitForTimeout(1000);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.log(`   ⚠️  Could not zoom to ${selector}`);
+    }
+    return false;
+  }
+  
+  async function cinematicClick(selector, description, options = {}) {
+    console.log(`   → ${description}`);
+    
+    try {
+      const element = await page.waitForSelector(selector, { 
+        state: 'visible', 
+        timeout: 5000 
+      });
+      
+      if (element) {
+        const box = await element.boundingBox();
+        if (box) {
+          const targetX = box.x + box.width / 2;
+          const targetY = box.y + box.height / 2;
+          
+          // Zoom in if specified
+          if (options.zoom) {
+            await zoomToElement(selector, options.zoom);
+          }
+          
+          // Move to element with cinematic motion
+          await cinematicMove(targetX, targetY);
+          await page.waitForTimeout(300);
+          
+          // Click animation
+          await page.evaluate(() => {
+            if (window.cinematicControl) {
+              window.cinematicControl.animateClick();
+            }
+          });
+          
+          // Actual click
+          await element.click();
+          await page.waitForTimeout(600);
+          
+          // Reset zoom if we zoomed in
+          if (options.zoom) {
+            await page.evaluate(() => {
+              if (window.cinematicControl) {
+                window.cinematicControl.resetZoom();
+                window.cinematicControl.highlightElement(null);
+              }
+            });
+            await page.waitForTimeout(800);
+          }
+          
+          return true;
+        }
+      }
+    } catch (error) {
+      console.log(`     ⚠️  Failed: ${error.message}`);
+    }
+    return false;
+  }
+  
+  async function cinematicType(selector, text, description) {
+    console.log(`   → ${description}`);
+    
+    if (await cinematicClick(selector, `Focusing on ${description}`, { zoom: 2.5 })) {
+      await page.waitForTimeout(500);
+      
+      // Clear existing text
+      await page.keyboard.down('Control');
+      await page.keyboard.press('A');
+      await page.keyboard.up('Control');
+      await page.waitForTimeout(100);
+      await page.keyboard.press('Delete');
+      await page.waitForTimeout(300);
+      
+      // Type with variable speed
+      for (const char of text) {
+        await page.keyboard.type(char);
+        await page.waitForTimeout(80 + Math.random() * 120);
+      }
+      
+      await page.waitForTimeout(500);
+      
+      // Reset zoom
+      await page.evaluate(() => {
+        if (window.cinematicControl) {
+          window.cinematicControl.resetZoom();
+        }
+      });
+      
+      return true;
+    }
+    return false;
+  }
+  
+  async function drawAttentionPattern() {
+    console.log('   ✨ Drawing attention pattern');
+    
+    // Create a figure-8 pattern
+    const centerX = 960;
+    const centerY = 540;
+    const radius = 200;
+    
+    for (let t = 0; t <= Math.PI * 2; t += Math.PI / 20) {
+      const x = centerX + Math.sin(t) * radius;
+      const y = centerY + Math.sin(t * 2) * radius / 2;
+      await cinematicMove(x, y, 50);
+    }
+    
+    await cinematicMove(centerX, centerY, 500);
+  }
+  
+  // Configuration-driven interaction executor
+  async function executeInteraction(interaction, index) {
+    const stepPrefix = `   Step ${index + 1}:`;
+    
+    try {
+      // Wait before moving cursor
+      if (interaction.waitBeforeMove) {
+        await page.waitForTimeout(interaction.waitBeforeMove);
+      }
+      
+      switch (interaction.type) {
+        case 'click':
+          console.log(`${stepPrefix} Clicking ${interaction.selector}`);
+          const success = await cinematicClick(
+            interaction.selector, 
+            interaction.description || `Click ${interaction.selector}`,
+            { zoom: interaction.zoomLevel || config.effects.zoomLevel }
+          );
+          if (!success && !interaction.skipIfNotFound) {
+            throw new Error(`Element not found: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'hover':
+          console.log(`${stepPrefix} Hovering ${interaction.selector}`);
+          try {
+            const element = await page.locator(interaction.selector).first();
+            const box = await element.boundingBox();
+            if (box) {
+              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
+              await page.evaluate((selector) => {
+                const el = document.querySelector(selector);
+                if (el) window.cinematicControl?.highlightElement(el);
+              }, interaction.selector);
+            } else if (!interaction.skipIfNotFound) {
+              throw new Error(`Element not found: ${interaction.selector}`);
+            }
+          } catch (error) {
+            if (!interaction.skipIfNotFound) throw error;
+            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'type':
+          console.log(`${stepPrefix} Typing "${interaction.text}" in ${interaction.selector}`);
+          const typeSuccess = await cinematicType(
+            interaction.selector,
+            interaction.text,
+            interaction.description || `Type in ${interaction.selector}`
+          );
+          if (!typeSuccess && !interaction.skipIfNotFound) {
+            throw new Error(`Element not found: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'scroll':
+          console.log(`${stepPrefix} Scrolling to ${interaction.selector}`);
+          try {
+            const element = await page.locator(interaction.selector).first();
+            await element.scrollIntoView({ behavior: 'smooth' });
+            const box = await element.boundingBox();
+            if (box) {
+              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
+            }
+          } catch (error) {
+            if (!interaction.skipIfNotFound) throw error;
+            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
+          }
+          break;
+          
+        case 'wait':
+          const waitTime = interaction.waitTime || 2000;
+          console.log(`${stepPrefix} Waiting ${waitTime}ms`);
+          await page.waitForTimeout(waitTime);
+          break;
+          
+        case 'navigate':
+          console.log(`${stepPrefix} Navigating to ${interaction.url}`);
+          const safeUrl = validateAndSanitizeUrl(baseUrl, interaction.url);
+          await page.goto(safeUrl, { waitUntil: 'networkidle' });
+          await page.waitForTimeout(config.timings.pageLoadWait);
+          break;
+          
+        default:
+          console.warn(`⚠️  ${stepPrefix} Unknown interaction type: ${interaction.type}`);
+      }
+      
+      // Wait after action
+      if (interaction.waitAfterClick) {
+        await page.waitForTimeout(interaction.waitAfterClick);
+      }
+      
+      // Wait between steps
+      await page.waitForTimeout(config.timings.waitBetweenSteps);
+      
+    } catch (error) {
+      console.error(`❌ ${stepPrefix} Error:`, error.message);
+      if (!config.recording.skipErrors) {
+        throw error;
+      }
+    }
+  }
+
   
   try {
     browser = await chromium.launch({
@@ -236,10 +531,6 @@ async function createDemoFromConfig(config, configPath) {
     });
     
     page = await context.newPage();
-  
-  // Current mouse position
-  let mouseX = 960;
-  let mouseY = 540;
   
   // Load and inject cinematic effects script securely
   try {
@@ -560,297 +851,6 @@ async function createDemoFromConfig(config, configPath) {
     }
   });
   
-  // Helper functions for cinematic effects with memory management
-  async function cinematicMove(targetX, targetY, duration = 1000) {
-    const steps = 60;
-    const stepDelay = duration / steps;
-    const timeouts = []; // Track timeouts for cleanup
-    
-    try {
-      for (let i = 0; i <= steps; i++) {
-        // Check if page is still alive
-        if (page.isClosed()) {
-          console.warn('⚠️  Page closed during animation, stopping cinematicMove');
-          break;
-        }
-        
-        const progress = i / steps;
-        // Smooth easing curve
-        const ease = progress < 0.5 
-          ? 4 * progress * progress * progress 
-          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-        
-        const x = mouseX + (targetX - mouseX) * ease;
-        const y = mouseY + (targetY - mouseY) * ease;
-        
-        try {
-          await page.evaluate(({ x, y }) => {
-            if (window.cinematicControl) {
-              window.cinematicControl.moveCursor(x, y);
-              window.cinematicControl.updateCameraFollow();
-            }
-          }, { x, y });
-          
-          await page.mouse.move(x, y);
-          await page.waitForTimeout(stepDelay);
-        } catch (error) {
-          if (error.message.includes('Target page, context or browser has been closed')) {
-            console.warn('⚠️  Browser closed during animation, stopping cinematicMove');
-            break;
-          }
-          throw error;
-        }
-      }
-      
-      mouseX = targetX;
-      mouseY = targetY;
-    } catch (error) {
-      // Clear any pending timeouts on error
-      timeouts.forEach(id => clearTimeout(id));
-      if (!error.message.includes('closed')) {
-        throw error;
-      }
-    }
-  }
-  
-  async function zoomToElement(selector, scale = 2, padding = 50) {
-    try {
-      const element = await page.$(selector);
-      if (element) {
-        const box = await element.boundingBox();
-        if (box) {
-          const centerX = box.x + box.width / 2;
-          const centerY = box.y + box.height / 2;
-          
-          console.log(`   🔍 Zooming to ${selector} (${scale}x)`);
-          
-          await page.evaluate(({ scale, centerX, centerY, selector }) => {
-            const el = document.querySelector(selector);
-            if (window.cinematicControl && el) {
-              window.cinematicControl.highlightElement(el);
-              window.cinematicControl.zoomTo(scale, centerX, centerY);
-            }
-          }, { scale, centerX, centerY, selector });
-          
-          await page.waitForTimeout(1000);
-          return true;
-        }
-      }
-    } catch (error) {
-      console.log(`   ⚠️  Could not zoom to ${selector}`);
-    }
-    return false;
-  }
-  
-  async function cinematicClick(selector, description, options = {}) {
-    console.log(`   → ${description}`);
-    
-    try {
-      const element = await page.waitForSelector(selector, { 
-        state: 'visible', 
-        timeout: 5000 
-      });
-      
-      if (element) {
-        const box = await element.boundingBox();
-        if (box) {
-          const targetX = box.x + box.width / 2;
-          const targetY = box.y + box.height / 2;
-          
-          // Zoom in if specified
-          if (options.zoom) {
-            await zoomToElement(selector, options.zoom);
-          }
-          
-          // Move to element with cinematic motion
-          await cinematicMove(targetX, targetY);
-          await page.waitForTimeout(300);
-          
-          // Click animation
-          await page.evaluate(() => {
-            if (window.cinematicControl) {
-              window.cinematicControl.animateClick();
-            }
-          });
-          
-          // Actual click
-          await element.click();
-          await page.waitForTimeout(600);
-          
-          // Reset zoom if we zoomed in
-          if (options.zoom) {
-            await page.evaluate(() => {
-              if (window.cinematicControl) {
-                window.cinematicControl.resetZoom();
-                window.cinematicControl.highlightElement(null);
-              }
-            });
-            await page.waitForTimeout(800);
-          }
-          
-          return true;
-        }
-      }
-    } catch (error) {
-      console.log(`     ⚠️  Failed: ${error.message}`);
-    }
-    return false;
-  }
-  
-  async function cinematicType(selector, text, description) {
-    console.log(`   → ${description}`);
-    
-    if (await cinematicClick(selector, `Focusing on ${description}`, { zoom: 2.5 })) {
-      await page.waitForTimeout(500);
-      
-      // Clear existing text
-      await page.keyboard.down('Control');
-      await page.keyboard.press('A');
-      await page.keyboard.up('Control');
-      await page.waitForTimeout(100);
-      await page.keyboard.press('Delete');
-      await page.waitForTimeout(300);
-      
-      // Type with variable speed
-      for (const char of text) {
-        await page.keyboard.type(char);
-        await page.waitForTimeout(80 + Math.random() * 120);
-      }
-      
-      await page.waitForTimeout(500);
-      
-      // Reset zoom
-      await page.evaluate(() => {
-        if (window.cinematicControl) {
-          window.cinematicControl.resetZoom();
-        }
-      });
-      
-      return true;
-    }
-    return false;
-  }
-  
-  async function drawAttentionPattern() {
-    console.log('   ✨ Drawing attention pattern');
-    
-    // Create a figure-8 pattern
-    const centerX = 960;
-    const centerY = 540;
-    const radius = 200;
-    
-    for (let t = 0; t <= Math.PI * 2; t += Math.PI / 20) {
-      const x = centerX + Math.sin(t) * radius;
-      const y = centerY + Math.sin(t * 2) * radius / 2;
-      await cinematicMove(x, y, 50);
-    }
-    
-    await cinematicMove(centerX, centerY, 500);
-  }
-  
-  // Configuration-driven interaction executor
-  async function executeInteraction(interaction, index) {
-    const stepPrefix = `   Step ${index + 1}:`;
-    
-    try {
-      // Wait before moving cursor
-      if (interaction.waitBeforeMove) {
-        await page.waitForTimeout(interaction.waitBeforeMove);
-      }
-      
-      switch (interaction.type) {
-        case 'click':
-          console.log(`${stepPrefix} Clicking ${interaction.selector}`);
-          const success = await cinematicClick(
-            interaction.selector, 
-            interaction.description || `Click ${interaction.selector}`,
-            { zoom: interaction.zoomLevel || config.effects.zoomLevel }
-          );
-          if (!success && !interaction.skipIfNotFound) {
-            throw new Error(`Element not found: ${interaction.selector}`);
-          }
-          break;
-          
-        case 'hover':
-          console.log(`${stepPrefix} Hovering ${interaction.selector}`);
-          try {
-            const element = await page.locator(interaction.selector).first();
-            const box = await element.boundingBox();
-            if (box) {
-              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
-              await page.evaluate((selector) => {
-                const el = document.querySelector(selector);
-                if (el) window.cinematicControl?.highlightElement(el);
-              }, interaction.selector);
-            } else if (!interaction.skipIfNotFound) {
-              throw new Error(`Element not found: ${interaction.selector}`);
-            }
-          } catch (error) {
-            if (!interaction.skipIfNotFound) throw error;
-            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
-          }
-          break;
-          
-        case 'type':
-          console.log(`${stepPrefix} Typing "${interaction.text}" in ${interaction.selector}`);
-          const typeSuccess = await cinematicType(
-            interaction.selector,
-            interaction.text,
-            interaction.description || `Type in ${interaction.selector}`
-          );
-          if (!typeSuccess && !interaction.skipIfNotFound) {
-            throw new Error(`Element not found: ${interaction.selector}`);
-          }
-          break;
-          
-        case 'scroll':
-          console.log(`${stepPrefix} Scrolling to ${interaction.selector}`);
-          try {
-            const element = await page.locator(interaction.selector).first();
-            await element.scrollIntoView({ behavior: 'smooth' });
-            const box = await element.boundingBox();
-            if (box) {
-              await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
-            }
-          } catch (error) {
-            if (!interaction.skipIfNotFound) throw error;
-            console.warn(`⚠️  ${stepPrefix} Element not found, skipping: ${interaction.selector}`);
-          }
-          break;
-          
-        case 'wait':
-          const waitTime = interaction.waitTime || 2000;
-          console.log(`${stepPrefix} Waiting ${waitTime}ms`);
-          await page.waitForTimeout(waitTime);
-          break;
-          
-        case 'navigate':
-          console.log(`${stepPrefix} Navigating to ${interaction.url}`);
-          const safeUrl = validateAndSanitizeUrl(baseUrl, interaction.url);
-          await page.goto(safeUrl, { waitUntil: 'networkidle' });
-          await page.waitForTimeout(config.timings.pageLoadWait);
-          break;
-          
-        default:
-          console.warn(`⚠️  ${stepPrefix} Unknown interaction type: ${interaction.type}`);
-      }
-      
-      // Wait after action
-      if (interaction.waitAfterClick) {
-        await page.waitForTimeout(interaction.waitAfterClick);
-      }
-      
-      // Wait between steps
-      await page.waitForTimeout(config.timings.waitBetweenSteps);
-      
-    } catch (error) {
-      console.error(`❌ ${stepPrefix} Error:`, error.message);
-      if (!config.recording.skipErrors) {
-        throw error;
-      }
-    }
-  }
-
   } catch (setupError) {
     console.error('\n❌ Error during browser setup:', setupError.message);
     throw setupError;
