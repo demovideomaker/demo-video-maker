@@ -1,6 +1,6 @@
 {
   "name": "demo-video-maker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "demo-cinematic.js",
   "bin": {
     "demo-video": "demo-cinematic.js",
