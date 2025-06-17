@@ -622,8 +622,9 @@ async function createDemoFromConfig(config, configPath) {
       throw new Error('Unsafe content detected in cinematic effects script');
     }
     
-    await page.addInitScript(cinematicEffectsScript);
-    console.log('✅ Cinematic effects script loaded');
+    // Store the script for later injection
+    page._cinematicEffectsScript = cinematicEffectsScript;
+    console.log('✅ Cinematic effects script prepared');
   } catch (error) {
     console.error('❌ Failed to load cinematic effects:', error.message);
     throw error;
@@ -677,6 +678,17 @@ async function createDemoFromConfig(config, configPath) {
       await page.waitForTimeout(2000);
     }
     
+    // Inject the cinematic effects script after page load
+    console.log('💉 Injecting cinematic effects script...');
+    await page.evaluate((script) => {
+      const scriptEl = document.createElement('script');
+      scriptEl.textContent = script;
+      document.head.appendChild(scriptEl);
+    }, page._cinematicEffectsScript);
+    
+    // Wait for script to initialize
+    await page.waitForTimeout(500);
+    
     console.log(`🎬 Starting demo: ${config.name}`);
     if (config.description) {
       console.log(`📝 ${config.description}`);
@@ -706,7 +718,7 @@ async function createDemoFromConfig(config, configPath) {
             console.log(`[Demo] Waiting for cinematicControl... (attempt ${attempts})`);
             setTimeout(checkControl, 100);
           } else {
-            console.error('[Demo] CinematicControl failed to initialize');
+            console.error('[Demo] CinematicControl failed to initialize after 5 seconds');
             resolve(false);
           }
         };
@@ -716,14 +728,72 @@ async function createDemoFromConfig(config, configPath) {
     
     if (!controlReady) {
       console.error('❌ Cinematic control not initialized properly!');
-      // Try to re-inject the script
+      // Try direct execution of the IIFE
       await page.evaluate(() => {
-        console.log('[Demo] Attempting manual cinematic effects setup...');
-        if (typeof setupCinematicEffects === 'function') {
-          setupCinematicEffects();
+        console.log('[Demo] Attempting direct IIFE execution...');
+        // The script should have already created the function
+        const scriptEl = document.querySelector('script[src*="cinematicEffects"]');
+        if (scriptEl) {
+          console.log('[Demo] Found script element, re-evaluating...');
+          eval(scriptEl.textContent);
         }
       });
+      
+      // Wait and check again
       await page.waitForTimeout(1000);
+      
+      const retryCheck = await page.evaluate(() => {
+        return !!(window.cinematicControl && window.cinematicControl.cursor);
+      });
+      
+      if (!retryCheck) {
+        console.error('❌ Failed to initialize cinematic effects after retry');
+        // Create a minimal fallback cursor
+        console.log('🔧 Creating fallback cursor...');
+        await page.evaluate(() => {
+          // Create a simple cursor without all the effects
+          const cursor = document.createElement('div');
+          cursor.id = 'fallback-cursor';
+          cursor.style.cssText = `
+            position: fixed !important;
+            width: 20px !important;
+            height: 20px !important;
+            background: radial-gradient(circle, #ff3366 0%, #ff336688 50%, transparent 70%) !important;
+            border-radius: 50% !important;
+            pointer-events: none !important;
+            z-index: 2147483647 !important;
+            transform: translate(-10px, -10px) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          `;
+          document.documentElement.appendChild(cursor);
+          
+          // Create minimal control object
+          window.cinematicControl = {
+            cursor: cursor,
+            moveCursor: function(x, y) {
+              cursor.style.left = x + 'px';
+              cursor.style.top = y + 'px';
+            },
+            animateClick: function() {
+              cursor.style.transform = 'translate(-10px, -10px) scale(0.8)';
+              setTimeout(() => {
+                cursor.style.transform = 'translate(-10px, -10px) scale(1)';
+              }, 200);
+            },
+            zoomTo: function() {}, // No-op
+            resetZoom: function() {}, // No-op
+            highlightElement: function() {}, // No-op
+            enableCameraFollow: function() {}, // No-op
+            updateCameraFollow: function() {} // No-op
+          };
+          
+          console.log('[Demo] Fallback cursor created');
+        });
+      } else {
+        console.log('✅ Cinematic control initialized on retry');
+      }
     }
     
     // Initialize position and configure effects
