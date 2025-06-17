@@ -140,10 +140,15 @@ app.listen(port, () => {
     
     // Install express
     console.log('Installing test app dependencies...');
-    execSync('npm install express', { 
-      cwd: testDir,
-      stdio: 'inherit'
-    });
+    try {
+      execSync('npm install express@4.18.2 --no-save', { 
+        cwd: testDir,
+        stdio: 'pipe' // Don't show output in tests
+      });
+    } catch (error) {
+      console.error('Failed to install express:', error.message);
+      throw error;
+    }
     
     // Start the test app
     console.log('Starting test app...');
@@ -196,8 +201,9 @@ app.listen(port, () => {
       
       try {
         // Run the demo generator
-        const demoProcess = spawn('node', [scriptPath, '.'], {
-          env: { ...process.env, HEADLESS: 'true' } // Force headless mode
+        const demoProcess = spawn('node', [scriptPath, '.', '--port', '3003'], {
+          env: { ...process.env, CI: 'true', HEADLESS: 'true' }, // Force headless mode
+          cwd: testDir
         });
         
         let output = '';
@@ -278,8 +284,9 @@ app.listen(port, () => {
       process.chdir(testDir);
       
       try {
-        const demoProcess = spawn('node', [scriptPath, '.'], {
-          env: { ...process.env, HEADLESS: 'true' }
+        const demoProcess = spawn('node', [scriptPath, '.', '--port', '3003'], {
+          env: { ...process.env, CI: 'true', HEADLESS: 'true' },
+          cwd: testDir
         });
         
         let output = '';

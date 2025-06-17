@@ -551,7 +551,7 @@ async function createDemoFromConfig(config, configPath) {
   
   try {
     browser = await chromium.launch({
-      headless: false,
+      headless: process.env.CI === 'true' || process.env.HEADLESS === 'true',
       args: [
         '--force-device-scale-factor=1',
         '--disable-gpu-rasterization',
