@@ -664,8 +664,11 @@ async function createDemoFromConfig(config, configPath) {
         }
       }
       
-      // Additional wait for any dynamic content
+      // Additional wait for any dynamic content and React hydration
       await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
+      
+      // Extra wait for React apps to complete hydration
+      await page.waitForTimeout(1000);
       
     } catch (navError) {
       console.error(`❌ Navigation failed: ${navError.message}`);
@@ -678,6 +681,17 @@ async function createDemoFromConfig(config, configPath) {
     if (config.description) {
       console.log(`📝 ${config.description}`);
     }
+    
+    // Ensure cursor is visible after all loading
+    await page.evaluate(() => {
+      if (window.cinematicControl && window.cinematicControl.cursor) {
+        const cursor = window.cinematicControl.cursor;
+        cursor.style.display = 'block';
+        cursor.style.visibility = 'visible';
+        cursor.style.opacity = '1';
+        console.log('[Demo] Cursor visibility enforced');
+      }
+    });
     
     // Wait for cinematicControl to be initialized (with timeout)
     const controlReady = await page.evaluate(() => {
