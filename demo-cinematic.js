@@ -489,6 +489,10 @@ async function createDemoFromConfig(config, configPath) {
           break;
           
         case 'scroll':
+          if (!interaction.selector) {
+            console.warn(`${stepPrefix} Missing selector for scroll interaction`);
+            break;
+          }
           console.log(`${stepPrefix} Scrolling to ${interaction.selector}`);
           try {
             const element = await page.locator(interaction.selector).first();
