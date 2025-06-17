@@ -566,8 +566,10 @@ describe('Comprehensive Configuration Tests', () => {
 
       const result = configLoader.loadConfig('/path/to/demo.json');
       
-      expect(result.__proto__).toBeUndefined();
-      expect(result.constructor).not.toHaveProperty('prototype');
+      // Check that dangerous properties were not added
+      expect(result.hasOwnProperty('__proto__')).toBe(false);
+      expect(result.hasOwnProperty('constructor')).toBe(false);
+      expect(result.hasOwnProperty('prototype')).toBe(false);
     });
 
     it('should validate selector length', () => {
