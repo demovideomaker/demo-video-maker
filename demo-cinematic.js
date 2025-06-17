@@ -4,7 +4,7 @@
  * Cinematic Demo Generator - Professional quality with zoom, glow, and camera effects
  */
 
-const { chromium } = require('@playwright/test');
+const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const ConfigLoader = require('./lib/configLoader');

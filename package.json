@@ -11,8 +11,11 @@
     "start-demo-app": "cd demo-app && npm run dev",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:cli": "jest tests/demo-cinematic.test.js",
+    "test:pre-publish": "jest tests/pre-publish.test.js --forceExit",
+    "test:all": "npm test && npm run test:cli && npm run test:pre-publish",
     "build": "mkdir -p dist && cp demo-cinematic.js dist/ && cp -r lib dist/",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run test:all && npm run build",
     "generate-sample": "node -e \"const ConfigLoader = require('./lib/configLoader'); new ConfigLoader().generateSampleConfig('./demo.json');\""
   },
   "keywords": [
@@ -34,7 +37,7 @@
   "license": "MIT",
   "description": "🎬 Create stunning cinematic demo videos automatically from your web applications with dynamic camera following, zoom effects, and gorgeous visual polish",
   "dependencies": {
-    "@playwright/test": "^1.53.0"
+    "playwright": "^1.53.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.5",
