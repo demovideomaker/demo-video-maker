@@ -22,6 +22,16 @@ console.log(`
 // Get and validate command line arguments
 const args = process.argv.slice(2);
 
+// Handle --init flag
+if (args.includes('--init')) {
+  console.log('🔧 Creating sample configuration...\n');
+  const samplePath = path.join(process.cwd(), 'demo.json');
+  const configLoader = new ConfigLoader();
+  configLoader.generateSampleConfig(samplePath);
+  console.log('✅ Sample demo.json created. Please customize it and run the demo.');
+  process.exit(0);
+}
+
 function validateProjectPath(inputPath) {
   if (!inputPath) return process.cwd();
   
