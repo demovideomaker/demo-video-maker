@@ -600,294 +600,7 @@ async function createDemoFromConfig(config, configPath) {
     throw error;
   }
 
-  // Legacy inline script (remove after testing)
-  await page.addInitScript(() => {
-    // Wait for DOM
-    if (document.readyState !== 'loading') {
-      setupCinematicEffects();
-    } else {
-      document.addEventListener('DOMContentLoaded', setupCinematicEffects);
-    }
-    
-    function setupCinematicEffects() {
-      // Create container for all effects
-      const effectsContainer = document.createElement('div');
-      effectsContainer.id = 'cinematic-effects';
-      effectsContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 2147483640;
-      `;
-      document.body.appendChild(effectsContainer);
-      
-      // Create glowing cursor
-      const cursor = document.createElement('div');
-      cursor.id = 'demo-cursor';
-      cursor.innerHTML = `
-        <div class="cursor-glow"></div>
-        <div class="cursor-glow-large"></div>
-        <svg width="32" height="32" viewBox="0 0 32 32" class="cursor-arrow">
-          <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
-            </filter>
-          </defs>
-          <path d="M6 6 L24 13 L16 16 L13 24 Z" 
-                fill="white" 
-                stroke="#ff3366" 
-                stroke-width="2" 
-                filter="url(#glow) url(#shadow)"/>
-        </svg>
-      `;
-      
-      cursor.style.cssText = `
-        position: fixed;
-        width: 32px;
-        height: 32px;
-        pointer-events: none;
-        z-index: 2147483647;
-        left: 960px;
-        top: 540px;
-        transform: translate(-4px, -4px);
-      `;
-      
-      effectsContainer.appendChild(cursor);
-      
-      // Create spotlight effect
-      const spotlight = document.createElement('div');
-      spotlight.id = 'spotlight';
-      spotlight.style.cssText = `
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        background: radial-gradient(circle at 960px 540px, 
-          transparent 100px, 
-          rgba(0,0,0,0.3) 300px, 
-          rgba(0,0,0,0.6) 100%);
-        z-index: 2147483641;
-        transition: none;
-      `;
-      effectsContainer.appendChild(spotlight);
-      
-      // Add zoom container
-      const zoomContainer = document.createElement('div');
-      zoomContainer.id = 'zoom-container';
-      zoomContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        transform-origin: center center;
-        transform: scale(1);
-        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      `;
-      
-      // Move all page content into zoom container
-      while (document.body.firstChild && document.body.firstChild.id !== 'cinematic-effects') {
-        zoomContainer.appendChild(document.body.firstChild);
-      }
-      document.body.insertBefore(zoomContainer, effectsContainer);
-      
-      // Add styles
-      const style = document.createElement('style');
-      style.textContent = `
-        body {
-          overflow: hidden !important;
-          background: #0a0a0a !important;
-        }
-        
-        .cursor-glow {
-          position: absolute;
-          width: 80px;
-          height: 80px;
-          background: radial-gradient(circle, rgba(255,51,102,0.3) 0%, transparent 70%);
-          border-radius: 50%;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          animation: pulse 2s ease-in-out infinite;
-        }
-        
-        .cursor-glow-large {
-          position: absolute;
-          width: 150px;
-          height: 150px;
-          background: radial-gradient(circle, rgba(255,51,102,0.1) 0%, transparent 70%);
-          border-radius: 50%;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          animation: pulse-large 3s ease-in-out infinite;
-        }
-        
-        .cursor-arrow {
-          position: relative;
-          z-index: 10;
-          filter: drop-shadow(0 0 10px rgba(255,51,102,0.8));
-          animation: glow-pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-          50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.4; }
-        }
-        
-        @keyframes pulse-large {
-          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-          50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.2; }
-        }
-        
-        @keyframes glow-pulse {
-          0%, 100% { filter: drop-shadow(0 0 10px rgba(255,51,102,0.8)); }
-          50% { filter: drop-shadow(0 0 20px rgba(255,51,102,1)); }
-        }
-        
-        @keyframes click-wave {
-          0% {
-            transform: translate(-50%, -50%) scale(0.5);
-            opacity: 1;
-            border-width: 4px;
-          }
-          100% {
-            transform: translate(-50%, -50%) scale(3);
-            opacity: 0;
-            border-width: 1px;
-          }
-        }
-        
-        .click-effect {
-          position: fixed;
-          width: 60px;
-          height: 60px;
-          border: 4px solid #3b82f6;
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: 2147483648;
-          animation: click-wave 0.8s ease-out;
-        }
-        
-        /* Smooth transitions for zoom */
-        #zoom-container > * {
-          transition: filter 0.3s ease;
-        }
-        
-        .zoomed #zoom-container > *:not(.no-blur) {
-          /* blur removed for sharp rendering */
-        }
-        
-        .highlight-element {
-          filter: none !important;
-          box-shadow: 0 0 30px rgba(59, 130, 246, 0.5) !important;
-          position: relative;
-          z-index: 100;
-        }
-      `;
-      document.head.appendChild(style);
-      
-      // Global cinematic control
-      window.cinematicControl = {
-        cursor: cursor,
-        spotlight: spotlight,
-        zoomContainer: zoomContainer,
-        currentZoom: 1,
-        mouseX: 960,
-        mouseY: 540,
-        
-        moveCursor: function(x, y) {
-          this.mouseX = x;
-          this.mouseY = y;
-          this.cursor.style.left = x + 'px';
-          this.cursor.style.top = y + 'px';
-          
-          // Update spotlight
-          this.spotlight.style.background = `radial-gradient(circle at ${x}px ${y}px, 
-            transparent 100px, 
-            rgba(0,0,0,0.3) 300px, 
-            rgba(0,0,0,0.6) 100%)`;
-        },
-        
-        zoomTo: function(scale, centerX, centerY, duration = 800) {
-          this.currentZoom = scale;
-          const offsetX = (window.innerWidth / 2 - centerX) * (scale - 1);
-          const offsetY = (window.innerHeight / 2 - centerY) * (scale - 1);
-          
-          this.zoomContainer.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0, 0.2, 1)`;
-          this.zoomContainer.style.transform = `scale(${scale}) translate(${offsetX/scale}px, ${offsetY/scale}px)`;
-          
-          if (scale > 1.5) {
-            document.body.classList.add('zoomed');
-          } else {
-            document.body.classList.remove('zoomed');
-          }
-        },
-        
-        highlightElement: function(element) {
-          // Remove previous highlights
-          document.querySelectorAll('.highlight-element').forEach(el => {
-            el.classList.remove('highlight-element');
-          });
-          
-          if (element) {
-            element.classList.add('highlight-element');
-          }
-        },
-        
-        animateClick: function() {
-          const click = document.createElement('div');
-          click.className = 'click-effect';
-          click.style.left = this.mouseX + 'px';
-          click.style.top = this.mouseY + 'px';
-          this.cursor.parentElement.appendChild(click);
-          setTimeout(() => click.remove(), 800);
-          
-          // Pulse cursor
-          this.cursor.querySelector('.cursor-arrow').style.transform = 'scale(0.8)';
-          setTimeout(() => {
-            this.cursor.querySelector('.cursor-arrow').style.transform = 'scale(1)';
-          }, 150);
-        },
-        
-        resetZoom: function(duration = 1000) {
-          this.zoomTo(1, window.innerWidth / 2, window.innerHeight / 2, duration);
-        },
-        
-        enableCameraFollow: function(enabled = true, zoomLevel = 1.8) {
-          this.cameraFollowEnabled = enabled;
-          this.cameraFollowZoom = zoomLevel;
-          console.log(`🎥 Camera follow ${enabled ? 'enabled' : 'disabled'} with zoom ${zoomLevel}`);
-          if (enabled) {
-            this.zoomTo(zoomLevel, this.mouseX, this.mouseY, 800);
-          } else {
-            this.resetZoom();
-          }
-        },
-        
-        updateCameraFollow: function() {
-          if (this.cameraFollowEnabled) {
-            // Smoother, more frequent updates
-            this.zoomContainer.style.transition = 'transform 150ms ease-out';
-            this.zoomTo(this.cameraFollowZoom, this.mouseX, this.mouseY, 150);
-          }
-        }
-      };
-      
-      // Initialize
-      window.cinematicControl.moveCursor(960, 540);
-    }
-  });
+  // Removed legacy inline script - using cinematicEffects.js instead
   
   } catch (setupError) {
     console.error('\n❌ Error during browser setup:', setupError.message);
@@ -939,12 +652,24 @@ async function createDemoFromConfig(config, configPath) {
     // Initialize position and configure effects
     await page.evaluate((effects) => {
       if (window.cinematicControl) {
-        window.cinematicControl.moveCursor(960, 200);
+        window.cinematicControl.moveCursor(960, 540);
         if (effects.cameraFollow) {
           window.cinematicControl.enableCameraFollow(true, effects.zoomLevel);
         }
+        // Debug: Check cursor visibility
+        const cursor = document.getElementById('demo-cursor');
+        if (cursor) {
+          console.log('Cursor element found:', cursor.style.left, cursor.style.top);
+          console.log('Cursor display:', window.getComputedStyle(cursor).display);
+          console.log('Cursor visibility:', window.getComputedStyle(cursor).visibility);
+        } else {
+          console.error('Cursor element not found!');
+        }
       }
     }, config.effects);
+    
+    // Wait for cursor to be visible
+    await page.waitForTimeout(500);
     
     // Optional entry point interaction
     if (config.entry.selector) {
@@ -964,6 +689,8 @@ async function createDemoFromConfig(config, configPath) {
       }
     } else {
       console.log('🎯 No entry point selector specified, starting from default position');
+      // Make cursor visible with initial movement
+      await cinematicMove(960, 540, 1000);
     }
     
     // Ensure DOM is ready for interactions
