@@ -1,6 +1,6 @@
 {
   "name": "demo-video-maker",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "main": "demo-cinematic.js",
   "bin": {
     "demo-video-maker": "demo-cinematic.js",
@@ -9,7 +9,7 @@
   "scripts": {
     "demo": "node demo-cinematic.js",
     "start-demo-app": "cd demo-app && npm run dev",
-    "test": "jest tests/configLoader.test.js tests/config-comprehensive.test.js",
+    "test": "jest tests/configLoader.test.js tests/config-comprehensive.test.js tests/cursor-persistence.test.js",
     "test:watch": "jest --watch",
     "test:cli": "jest tests/demo-cinematic.test.js",
     "test:pre-publish": "jest tests/pre-publish.test.js --forceExit",
@@ -46,6 +46,7 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "rollup": "^4.43.0",
     "rollup-plugin-preserve-shebang": "^1.0.1"
   },
