@@ -445,6 +445,10 @@ async function createDemoFromConfig(config, configPath) {
       switch (interaction.type) {
         case 'click':
           console.log(`${stepPrefix} Clicking ${interaction.selector}`);
+          
+          // Store current URL before click
+          const urlBeforeClick = page.url();
+          
           const success = await cinematicClick(
             interaction.selector, 
             interaction.description || `Click ${interaction.selector}`,
@@ -452,6 +456,23 @@ async function createDemoFromConfig(config, configPath) {
           );
           if (!success && !interaction.skipIfNotFound) {
             throw new Error(`Element not found: ${interaction.selector}`);
+          }
+          
+          // Check if click caused navigation
+          if (success) {
+            try {
+              // Wait a bit to see if navigation starts
+              await page.waitForTimeout(500);
+              
+              // If URL changed, wait for new page to load
+              if (page.url() !== urlBeforeClick) {
+                console.log(`  ↳ Navigation detected, waiting for page load...`);
+                await page.waitForLoadState('load').catch(() => {});
+                await page.waitForTimeout(1000);
+              }
+            } catch (e) {
+              // Ignore navigation detection errors
+            }
           }
           break;
           
@@ -518,12 +539,16 @@ async function createDemoFromConfig(config, configPath) {
         case 'navigate':
           console.log(`${stepPrefix} Navigating to ${interaction.url}`);
           const safeUrl = validateAndSanitizeUrl(baseUrl, interaction.url);
-          await page.goto(safeUrl, { waitUntil: 'networkidle' });
           
-          // Wait for page to be fully loaded
-          await page.waitForLoadState('domcontentloaded');
-          await page.waitForLoadState('load');
-          await page.waitForLoadState('networkidle');
+          try {
+            await page.goto(safeUrl, { 
+              waitUntil: 'domcontentloaded',
+              timeout: 15000 
+            });
+            await page.waitForLoadState('load');
+          } catch (navError) {
+            console.warn(`⚠️  Navigation timeout, continuing anyway`);
+          }
           
           await page.waitForTimeout(config.timings.pageLoadWait);
           break;
@@ -616,15 +641,38 @@ async function createDemoFromConfig(config, configPath) {
     // Navigate to entry point with URL validation
     const entryUrl = validateAndSanitizeUrl(baseUrl, config.entry.url);
     console.log(`🌐 Navigating to: ${entryUrl}`);
-    await page.goto(entryUrl, { waitUntil: 'networkidle' });
     
-    // Wait for page to be fully loaded
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForLoadState('load');
-    await page.waitForLoadState('networkidle');
-    
-    // Additional wait for any dynamic content
-    await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
+    try {
+      // Use 'domcontentloaded' instead of 'networkidle' for better SPA compatibility
+      await page.goto(entryUrl, { 
+        waitUntil: 'domcontentloaded',
+        timeout: 30000 
+      });
+      
+      // Wait for the page to be interactive
+      await page.waitForLoadState('load');
+      
+      // If a specific selector is provided, wait for it
+      if (config.entry.selector) {
+        try {
+          await page.waitForSelector(config.entry.selector, { 
+            timeout: 5000,
+            state: 'visible' 
+          });
+        } catch (e) {
+          console.warn(`⚠️  Entry selector not found: ${config.entry.selector}`);
+        }
+      }
+      
+      // Additional wait for any dynamic content
+      await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
+      
+    } catch (navError) {
+      console.error(`❌ Navigation failed: ${navError.message}`);
+      // Try one more time with just basic load
+      await page.goto(entryUrl, { waitUntil: 'load', timeout: 15000 });
+      await page.waitForTimeout(2000);
+    }
     
     console.log(`🎬 Starting demo: ${config.name}`);
     if (config.description) {
