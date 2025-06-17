@@ -1,58 +1,56 @@
 {
-  "name": "Dashboard Feature Demo",
-  "description": "Demonstrates the main dashboard functionality",
+  "name": "Dashboard Feature Demo"
+  "description": "Demonstrates the main dashboard functionality"
   "entry": {
-    "url": "/dashboard",
-    "selector": "[data-testid='dashboard-container']",
+    "url": "/dashboard"
+    "selector": "[data-testid='dashboard-container']"
     "waitTime": 2000
-  },
+  }
   "interactions": [
     {
-      "type": "click",
-      "selector": "[data-testid='stats-card']",
-      "waitBeforeMove": 1000,
-      "waitAfterClick": 1500,
-      "zoomLevel": 2,
+      "type": "click"
+      "selector": "[data-testid='stats-card']"
+      "waitBeforeMove": 1000
+      "waitAfterClick": 1500
+      "zoomLevel": 2
       "description": "Click on the stats card to view details"
-    },
+    }
     {
-      "type": "hover",
-      "selector": "[data-testid='chart-element']",
-      "waitBeforeMove": 800,
-      "waitAfterClick": 0,
+      "type": "hover"
+      "selector": "[data-testid='chart-element']"
+      "waitBeforeMove": 800
+      "waitAfterClick": 0
       "description": "Hover over chart to show tooltip"
-    },
+    }
     {
-      "type": "type",
-      "selector": "[data-testid='search-input']",
-      "text": "Sample search query",
-      "waitBeforeMove": 500,
-      "waitAfterClick": 2000,
+      "type": "type"
+      "selector": "[data-testid='search-input']"
+      "text": "Sample search query"
+      "waitBeforeMove": 500
+      "waitAfterClick": 2000
       "description": "Type in the search field"
-    },
+    }
     {
-      "type": "wait",
-      "waitTime": 3000,
+      "type": "wait"
+      "waitTime": 3000
       "description": "Wait for animation to complete"
     }
-  ],
+  ]
   "effects": {
-    "cameraFollow": true,
-    "zoomLevel": 1.8,
-    "glowEffects": true,
-    "clickAnimations": true,
-    "mouseMoveSpeed": 60,
-    "spotlightEffect": true
-  },
+    "cameraFollow": true
+    "zoomLevel": 1.8
+    "clickAnimations": true
+    "mouseMoveSpeed": 60
+  }
   "recording": {
-    "duration": 45000,
-    "skipErrors": false,
+    "duration": 45000
+    "skipErrors": false
     "outputName": "dashboard-feature-demo"
-  },
+  }
   "timings": {
-    "waitBeforeMove": 1000,
-    "waitAfterClick": 1500,
-    "waitBetweenSteps": 800,
+    "waitBeforeMove": 1000
+    "waitAfterClick": 1500
+    "waitBetweenSteps": 800
     "pageLoadWait": 2000
   }
 }

@@ -14,7 +14,7 @@ Transform your web application into professional demo videos with cinematic mous
 
 - 🎯 **Configuration-Driven**: JSON-based demo definitions for precise control
 - 📷 **Camera Follow**: Dynamic zoom and pan that follows mouse movement  
-- ✨ **Visual Effects**: Glowing cursor, click animations, and smooth transitions
+- ✨ **Visual Effects**: Click animations, element highlighting, and smooth transitions
 - 🎬 **Cinematic Quality**: Professional 1920x1080 HD video output
 - 🔧 **Highly Configurable**: Customize timing, effects, interactions, and visual style
 - 🖱️ **Realistic Interactions**: Click, hover, type, scroll, navigate with natural timing
@@ -105,7 +105,6 @@ Demo Video Maker uses `demo.json` files to define interactive demonstrations. Pl
   "effects": {
     "cameraFollow": true,
     "zoomLevel": 1.6,
-    "glowEffects": true,
     "clickAnimations": true
   },
   "recording": {
@@ -217,10 +216,8 @@ Control the cinematic visual effects and camera behavior.
   "effects": {
     "cameraFollow": true,           // Enable dynamic camera following
     "zoomLevel": 1.6,              // Default zoom level (1.0-5.0)
-    "glowEffects": true,           // Mouse cursor glow effects
     "clickAnimations": true,       // Ripple effects on clicks
-    "mouseMoveSpeed": 60,          // Cursor movement speed (10-200)
-    "spotlightEffect": true        // Spotlight following cursor
+    "mouseMoveSpeed": 60           // Mouse movement speed (10-200)
   }
 }
 ```
@@ -229,10 +226,8 @@ Control the cinematic visual effects and camera behavior.
 |----------|------|---------|-------|-------------|
 | `cameraFollow` | boolean | `true` | - | Enable dynamic zoom and camera following |
 | `zoomLevel` | number | `1.6` | `1.0-5.0` | Default zoom level for interactions |
-| `glowEffects` | boolean | `true` | - | Show glowing cursor effects |
 | `clickAnimations` | boolean | `true` | - | Show click ripple animations |
-| `mouseMoveSpeed` | number | `60` | `10-200` | Cursor movement speed (steps per second) |
-| `spotlightEffect` | boolean | `true` | - | Dynamic spotlight following cursor |
+| `mouseMoveSpeed` | number | `60` | `10-200` | Mouse movement speed (steps per second) |
 
 ### ⏱️ Timing Configuration
 
@@ -241,7 +236,7 @@ Fine-tune the timing and pacing of interactions.
 ```json
 {
   "timings": {
-    "waitBeforeMove": 1000,        // Delay before moving cursor (ms)
+    "waitBeforeMove": 1000,        // Delay before moving mouse (ms)
     "waitAfterClick": 1500,        // Delay after clicking (ms)
     "waitBetweenSteps": 800,       // Delay between interaction steps (ms)
     "pageLoadWait": 2000           // Wait time after navigation (ms)
@@ -251,7 +246,7 @@ Fine-tune the timing and pacing of interactions.
 
 | Property | Type | Default | Range | Description |
 |----------|------|---------|-------|-------------|
-| `waitBeforeMove` | number | `1000` | `0-10000` | Milliseconds to wait before moving cursor |
+| `waitBeforeMove` | number | `1000` | `0-10000` | Milliseconds to wait before moving mouse |
 | `waitAfterClick` | number | `1500` | `0-10000` | Milliseconds to wait after interaction |
 | `waitBetweenSteps` | number | `800` | `0-5000` | Milliseconds between interaction steps |
 | `pageLoadWait` | number | `2000` | `1000-30000` | Milliseconds to wait after page navigation |
@@ -897,36 +892,7 @@ npm audit
 
 ## 🔧 Troubleshooting
 
-### Cursor Not Appearing in React/Next.js Apps
-
-If the custom cursor disappears in React applications, you can use **Lite Mode** which leverages Playwright's built-in cursor while maintaining all cinematic effects:
-
-```bash
-# Enable lite mode via environment variable
-CINEMATIC_LITE=true demo-video-maker --port 3000
-
-# Or add to your demo.json configuration
-{
-  "recording": {
-    "liteMode": true
-  }
-}
-```
-
-**Lite Mode Features:**
-- ✅ Uses Playwright's native cursor (more reliable)
-- ✅ Maintains zoom effects and camera follow
-- ✅ Keeps element highlighting
-- ✅ Preserves click animations
-- ✅ Better compatibility with React hydration
-
-**When to Use Lite Mode:**
-- React apps with strict hydration rules
-- Next.js applications
-- Sites with Content Security Policies
-- When the custom cursor flashes and disappears
-
-### Other Common Issues
+### Common Issues
 
 **Page Not Loading:**
 - Ensure your app is running on the specified port

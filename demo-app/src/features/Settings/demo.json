@@ -1,75 +1,73 @@
 {
-  "name": "Settings Configuration Demo",
-  "description": "Demonstrates various settings and configuration options",
+  "name": "Settings Configuration Demo"
+  "description": "Demonstrates various settings and configuration options"
   "entry": {
     "url": "/settings", 
-    "selector": "[data-testid='settings-container'], .main-content",
+    "selector": "[data-testid='settings-container'], .main-content"
     "waitTime": 2000
-  },
+  }
   "interactions": [
     {
-      "type": "click",
-      "selector": "[data-testid='nav-settings'], [href='/settings']",
-      "waitBeforeMove": 1000,
-      "waitAfterClick": 2500,
-      "zoomLevel": 1.5,
+      "type": "click"
+      "selector": "[data-testid='nav-settings'], [href='/settings']"
+      "waitBeforeMove": 1000
+      "waitAfterClick": 2500
+      "zoomLevel": 1.5
       "description": "Navigate to settings page"
-    },
+    }
     {
-      "type": "hover",
-      "selector": "[data-testid='general-settings'], .settings-section:first-child",
-      "waitBeforeMove": 800,
-      "waitAfterClick": 1200,
-      "zoomLevel": 1.8,
-      "skipIfNotFound": true,
+      "type": "hover"
+      "selector": "[data-testid='general-settings'], .settings-section:first-child"
+      "waitBeforeMove": 800
+      "waitAfterClick": 1200
+      "zoomLevel": 1.8
+      "skipIfNotFound": true
       "description": "Examine general settings section"
-    },
+    }
     {
       "type": "click", 
-      "selector": "input[type='checkbox'], .toggle, .switch",
-      "waitBeforeMove": 1000,
-      "waitAfterClick": 1500,
-      "zoomLevel": 2.2,
-      "skipIfNotFound": true,
+      "selector": "input[type='checkbox'], .toggle, .switch"
+      "waitBeforeMove": 1000
+      "waitAfterClick": 1500
+      "zoomLevel": 2.2
+      "skipIfNotFound": true
       "description": "Toggle a setting option"
-    },
+    }
     {
-      "type": "type",
-      "selector": "input[type='text'], input[type='email'], textarea",
-      "text": "demo@example.com",
-      "waitBeforeMove": 800,
-      "waitAfterClick": 2000,
-      "zoomLevel": 1.9,
-      "skipIfNotFound": true,
+      "type": "type"
+      "selector": "input[type='text'], input[type='email'], textarea"
+      "text": "demo@example.com"
+      "waitBeforeMove": 800
+      "waitAfterClick": 2000
+      "zoomLevel": 1.9
+      "skipIfNotFound": true
       "description": "Fill in text field"
-    },
+    }
     {
-      "type": "click",
-      "selector": "[data-testid='save-settings'], .btn-primary, button:contains('Save')",
-      "waitBeforeMove": 1200,
-      "waitAfterClick": 2000,
-      "zoomLevel": 1.6,
-      "skipIfNotFound": true,
+      "type": "click"
+      "selector": "[data-testid='save-settings'], .btn-primary, button:contains('Save')"
+      "waitBeforeMove": 1200
+      "waitAfterClick": 2000
+      "zoomLevel": 1.6
+      "skipIfNotFound": true
       "description": "Save settings changes"
     }
-  ],
+  ]
   "effects": {
-    "cameraFollow": true,
-    "zoomLevel": 1.7,
-    "glowEffects": true,
-    "clickAnimations": true,
-    "mouseMoveSpeed": 65,
-    "spotlightEffect": true
-  },
+    "cameraFollow": true
+    "zoomLevel": 1.7
+    "clickAnimations": true
+    "mouseMoveSpeed": 65
+  }
   "recording": {
-    "duration": 35000,
-    "skipErrors": true,
+    "duration": 35000
+    "skipErrors": true
     "outputName": "settings-feature"
-  },
+  }
   "timings": {
-    "waitBeforeMove": 1000,
-    "waitAfterClick": 1500,
-    "waitBetweenSteps": 900,
+    "waitBeforeMove": 1000
+    "waitAfterClick": 1500
+    "waitBetweenSteps": 900
     "pageLoadWait": 2000
   }
 }

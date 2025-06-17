@@ -1,62 +1,60 @@
 {
   "name": "Analytics Feature Demo", 
-  "description": "Showcases analytics charts and metrics visualization",
+  "description": "Showcases analytics charts and metrics visualization"
   "entry": {
-    "url": "/analytics",
-    "selector": "[data-testid='analytics-container'], .main-content",
+    "url": "/analytics"
+    "selector": "[data-testid='analytics-container'], .main-content"
     "waitTime": 3000
-  },
+  }
   "interactions": [
     {
-      "type": "navigate",
-      "url": "/analytics",
-      "waitTime": 2000,
+      "type": "navigate"
+      "url": "/analytics"
+      "waitTime": 2000
       "description": "Navigate to analytics page"
-    },
+    }
     {
-      "type": "hover",
-      "selector": "[data-testid='chart-container'], .chart, svg",
-      "waitBeforeMove": 1200,
-      "waitAfterClick": 1000,
-      "zoomLevel": 1.9,
-      "skipIfNotFound": true,
+      "type": "hover"
+      "selector": "[data-testid='chart-container'], .chart, svg"
+      "waitBeforeMove": 1200
+      "waitAfterClick": 1000
+      "zoomLevel": 1.9
+      "skipIfNotFound": true
       "description": "Examine analytics charts"
-    },
+    }
     {
-      "type": "scroll",
-      "selector": "[data-testid='metrics-grid'], .stats-grid",
-      "waitBeforeMove": 800,
-      "waitAfterClick": 1500,
-      "skipIfNotFound": true,
+      "type": "scroll"
+      "selector": "[data-testid='metrics-grid'], .stats-grid"
+      "waitBeforeMove": 800
+      "waitAfterClick": 1500
+      "skipIfNotFound": true
       "description": "Scroll to metrics section"
-    },
+    }
     {
-      "type": "click",
-      "selector": "[data-testid='filter-button'], .btn:contains('Filter')",
-      "waitBeforeMove": 1000,
-      "waitAfterClick": 2000,
-      "zoomLevel": 1.7,
-      "skipIfNotFound": true,
+      "type": "click"
+      "selector": "[data-testid='filter-button'], .btn:contains('Filter')"
+      "waitBeforeMove": 1000
+      "waitAfterClick": 2000
+      "zoomLevel": 1.7
+      "skipIfNotFound": true
       "description": "Click filter controls"
     }
-  ],
+  ]
   "effects": {
-    "cameraFollow": true,
-    "zoomLevel": 1.7,
-    "glowEffects": true,
-    "clickAnimations": true,
-    "mouseMoveSpeed": 55,
-    "spotlightEffect": true
-  },
+    "cameraFollow": true
+    "zoomLevel": 1.7
+    "clickAnimations": true
+    "mouseMoveSpeed": 55
+  }
   "recording": {
-    "duration": 30000,
-    "skipErrors": true,
+    "duration": 30000
+    "skipErrors": true
     "outputName": "analytics-feature"
-  },
+  }
   "timings": {
-    "waitBeforeMove": 1200,
-    "waitAfterClick": 1500,
-    "waitBetweenSteps": 1000,
+    "waitBeforeMove": 1200
+    "waitAfterClick": 1500
+    "waitBetweenSteps": 1000
     "pageLoadWait": 3000
   }
 }

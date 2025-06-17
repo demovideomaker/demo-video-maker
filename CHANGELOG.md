@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📋 **Configuration System** - JSON-based demo definitions with validation
 - 🎯 **Interactive Elements** - Click, hover, type, scroll, wait, and navigate interactions
 - 📷 **Camera Effects** - Dynamic zoom and pan following mouse movement
-- ✨ **Visual Effects** - Glowing cursor, click animations, and spotlight effects
+- ✨ **Visual Effects** - Click animations, element highlighting, and zoom effects
 - 🔧 **CLI Interface** - Global installation support with `cinematic-demo` command
 - 🛡️ **Security Features** - Input validation, path traversal prevention, and sanitization
 - 🧪 **Test Suite** - Comprehensive tests for configuration loading and validation
@@ -113,6 +113,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved navigation handling for apps with persistent connections (WebSockets, polling)
 - Better error recovery with fallback navigation strategies
 - Simplified page load detection for better compatibility
+
+## [1.0.20] - 2025-06-17
+
+### Changed
+- Updated all documentation to reflect Playwright cursor as default
+- Updated tests to match new simplified implementation
+- Removed all references to deprecated features from README
+
+### Fixed
+- Cleaned up test suite to remove obsolete cursor persistence tests
+- Fixed configuration examples in documentation
 
 ## [1.0.19] - 2025-06-17
 
