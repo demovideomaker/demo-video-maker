@@ -308,10 +308,21 @@ async function createDemoFromConfig(config, configPath) {
     
     try {
       if (!page) return false;
-      const element = await page.waitForSelector(selector, { 
-        state: 'visible', 
-        timeout: 5000 
-      });
+      // Try multiple times with increasing timeout
+      let element = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          element = await page.waitForSelector(selector, { 
+            state: 'visible', 
+            timeout: 2000 + (attempt * 1000) 
+          });
+          if (element) break;
+        } catch (e) {
+          if (attempt === 2) throw e;
+          console.log(`     ⚠️  Retry ${attempt + 1}: Element not found yet`);
+          await page.waitForTimeout(500);
+        }
+      }
       
       if (element) {
         const box = await element.boundingBox();
@@ -448,15 +459,16 @@ async function createDemoFromConfig(config, configPath) {
           console.log(`${stepPrefix} Hovering ${interaction.selector}`);
           try {
             const element = await page.locator(interaction.selector).first();
-            const box = await element.boundingBox();
-            if (box) {
+            await element.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+            const box = await element.boundingBox().catch(() => null);
+            if (box && box.width > 0 && box.height > 0) {
               await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
               await page.evaluate((selector) => {
                 const el = document.querySelector(selector);
                 if (el) window.cinematicControl?.highlightElement(el);
               }, interaction.selector);
             } else if (!interaction.skipIfNotFound) {
-              throw new Error(`Element not found: ${interaction.selector}`);
+              throw new Error(`Element not found or not visible: ${interaction.selector}`);
             }
           } catch (error) {
             if (!interaction.skipIfNotFound) throw error;
@@ -480,9 +492,11 @@ async function createDemoFromConfig(config, configPath) {
           console.log(`${stepPrefix} Scrolling to ${interaction.selector}`);
           try {
             const element = await page.locator(interaction.selector).first();
-            await element.scrollIntoView({ behavior: 'smooth' });
-            const box = await element.boundingBox();
-            if (box) {
+            await element.waitFor({ state: 'visible', timeout: 3000 }).catch(() => null);
+            await element.scrollIntoViewIfNeeded({ timeout: 3000 });
+            await page.waitForTimeout(500); // Wait for scroll animation
+            const box = await element.boundingBox().catch(() => null);
+            if (box && box.width > 0 && box.height > 0) {
               await cinematicMove(box.x + box.width / 2, box.y + box.height / 2);
             }
           } catch (error) {
@@ -501,6 +515,12 @@ async function createDemoFromConfig(config, configPath) {
           console.log(`${stepPrefix} Navigating to ${interaction.url}`);
           const safeUrl = validateAndSanitizeUrl(baseUrl, interaction.url);
           await page.goto(safeUrl, { waitUntil: 'networkidle' });
+          
+          // Wait for page to be fully loaded
+          await page.waitForLoadState('domcontentloaded');
+          await page.waitForLoadState('load');
+          await page.waitForLoadState('networkidle');
+          
           await page.waitForTimeout(config.timings.pageLoadWait);
           break;
           
@@ -574,6 +594,7 @@ async function createDemoFromConfig(config, configPath) {
     }
     
     await page.addInitScript(cinematicEffectsScript);
+    console.log('✅ Cinematic effects script loaded');
   } catch (error) {
     console.error('❌ Failed to load cinematic effects:', error.message);
     throw error;
@@ -879,11 +900,40 @@ async function createDemoFromConfig(config, configPath) {
     const entryUrl = validateAndSanitizeUrl(baseUrl, config.entry.url);
     console.log(`🌐 Navigating to: ${entryUrl}`);
     await page.goto(entryUrl, { waitUntil: 'networkidle' });
+    
+    // Wait for page to be fully loaded
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('load');
+    await page.waitForLoadState('networkidle');
+    
+    // Additional wait for any dynamic content
     await page.waitForTimeout(config.entry.waitTime || config.timings.pageLoadWait);
     
     console.log(`🎬 Starting demo: ${config.name}`);
     if (config.description) {
       console.log(`📝 ${config.description}`);
+    }
+    
+    // Wait for cinematicControl to be initialized (with timeout)
+    const controlReady = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds total
+        const checkControl = () => {
+          if (window.cinematicControl) {
+            resolve(true);
+          } else if (attempts++ < maxAttempts) {
+            setTimeout(checkControl, 100);
+          } else {
+            resolve(false);
+          }
+        };
+        checkControl();
+      });
+    });
+    
+    if (!controlReady) {
+      console.warn('⚠️  Cinematic control not initialized, continuing anyway');
     }
     
     // Initialize position and configure effects
@@ -912,7 +962,20 @@ async function createDemoFromConfig(config, configPath) {
       } catch (error) {
         console.warn(`⚠️  Entry point not found: ${config.entry.selector}`);
       }
+    } else {
+      console.log('🎯 No entry point selector specified, starting from default position');
     }
+    
+    // Ensure DOM is ready for interactions
+    await page.evaluate(() => {
+      return new Promise((resolve) => {
+        if (document.readyState === 'complete') {
+          resolve();
+        } else {
+          window.addEventListener('load', resolve);
+        }
+      });
+    });
     
     // Opening attention pattern (optional)
     if (config.interactions.length > 0) {
