@@ -633,11 +633,14 @@ async function createDemoFromConfig(config, configPath) {
         let attempts = 0;
         const maxAttempts = 50; // 5 seconds total
         const checkControl = () => {
-          if (window.cinematicControl) {
+          if (window.cinematicControl && window.cinematicControl.cursor) {
+            console.log('[Demo] CinematicControl is ready');
             resolve(true);
           } else if (attempts++ < maxAttempts) {
+            console.log(`[Demo] Waiting for cinematicControl... (attempt ${attempts})`);
             setTimeout(checkControl, 100);
           } else {
+            console.error('[Demo] CinematicControl failed to initialize');
             resolve(false);
           }
         };
@@ -646,7 +649,15 @@ async function createDemoFromConfig(config, configPath) {
     });
     
     if (!controlReady) {
-      console.warn('⚠️  Cinematic control not initialized, continuing anyway');
+      console.error('❌ Cinematic control not initialized properly!');
+      // Try to re-inject the script
+      await page.evaluate(() => {
+        console.log('[Demo] Attempting manual cinematic effects setup...');
+        if (typeof setupCinematicEffects === 'function') {
+          setupCinematicEffects();
+        }
+      });
+      await page.waitForTimeout(1000);
     }
     
     // Initialize position and configure effects
@@ -670,6 +681,32 @@ async function createDemoFromConfig(config, configPath) {
     
     // Wait for cursor to be visible
     await page.waitForTimeout(500);
+    
+    // Start periodic cursor visibility check
+    const cursorCheckInterval = setInterval(async () => {
+      try {
+        if (page && !page.isClosed()) {
+          await page.evaluate(() => {
+            const cursor = document.getElementById('demo-cursor');
+            if (!cursor) {
+              console.error('[Demo] Cursor element missing!');
+            } else {
+              const style = window.getComputedStyle(cursor);
+              if (style.display === 'none' || style.visibility === 'hidden') {
+                console.error('[Demo] Cursor is hidden!', {
+                  display: style.display,
+                  visibility: style.visibility
+                });
+              }
+            }
+          });
+        } else {
+          clearInterval(cursorCheckInterval);
+        }
+      } catch (e) {
+        clearInterval(cursorCheckInterval);
+      }
+    }, 1000);
     
     // Optional entry point interaction
     if (config.entry.selector) {
