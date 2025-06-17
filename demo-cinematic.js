@@ -249,9 +249,16 @@ async function createDemoFromConfig(config, configPath) {
     );
     
     // Validate script content for security
-    const dangerousPatterns = ['eval(', 'Function(', 'setTimeout(', 'setInterval(', 'document.write'];
+    // Allow setTimeout for animations but check for dangerous patterns
+    const dangerousPatterns = [
+      /eval\s*\(/,
+      /new\s+Function\s*\(/,
+      /setTimeout\s*\(\s*['"`].*['"`]\s*\)/,  // Only block string-based setTimeout
+      /setInterval\s*\(\s*['"`].*['"`]\s*\)/, // Only block string-based setInterval
+      /document\.write/
+    ];
     const hasUnsafeContent = dangerousPatterns.some(pattern => 
-      cinematicEffectsScript.includes(pattern)
+      pattern.test(cinematicEffectsScript)
     );
     
     if (hasUnsafeContent) {
