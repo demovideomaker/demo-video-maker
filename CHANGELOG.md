@@ -114,6 +114,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Better error recovery with fallback navigation strategies
 - Simplified page load detection for better compatibility
 
+## [1.0.19] - 2025-06-17
+
+### Changed
+- **BREAKING**: Made lite mode (Playwright's native cursor) the default and only mode
+- Removed custom cursor implementation in favor of native cursor for better reliability
+- Simplified codebase by removing conditional logic between full and lite modes
+- Removed deprecated configuration options (liteMode, glowEffects, spotlightEffect)
+
+### Removed
+- Removed cinematicEffects.js (full mode implementation)
+- Removed custom cursor with glow effects
+- Removed spotlight effect following cursor
+- Removed liteMode configuration option
+- Removed CINEMATIC_LITE environment variable
+
+### Improved
+- Better compatibility with React/Next.js applications
+- More reliable cursor behavior across all frameworks
+- Simplified effects system focusing on zoom, pan, and highlighting
+- Cleaner and more maintainable codebase
+
 ## [Unreleased]
 
 ### Planned

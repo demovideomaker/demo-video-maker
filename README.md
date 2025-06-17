@@ -399,10 +399,8 @@ Create focused demos for different audiences:
   "effects": {
     "cameraFollow": true,
     "zoomLevel": 1.7,
-    "glowEffects": true,
     "clickAnimations": true,
-    "mouseMoveSpeed": 55,
-    "spotlightEffect": true
+    "mouseMoveSpeed": 55
   },
   "recording": {
     "duration": 60000,
@@ -473,10 +471,8 @@ Create focused demos for different audiences:
   "effects": {
     "cameraFollow": true,
     "zoomLevel": 1.6,
-    "glowEffects": true,
     "clickAnimations": true,
-    "mouseMoveSpeed": 65,
-    "spotlightEffect": true
+    "mouseMoveSpeed": 65
   },
   "recording": {
     "duration": 40000,
@@ -796,8 +792,7 @@ demo-video-maker --port 8080
 {
   "effects": {
     "cameraFollow": false,      // Disable for better performance
-    "mouseMoveSpeed": 100,      // Faster movements
-    "glowEffects": false        // Disable for simpler rendering
+    "mouseMoveSpeed": 100       // Faster movements
   },
   "timings": {
     "waitBetweenSteps": 500     // Reduce delays
@@ -842,10 +837,8 @@ interface Interaction {
 interface EffectsConfig {
   cameraFollow?: boolean;
   zoomLevel?: number;
-  glowEffects?: boolean;
   clickAnimations?: boolean;
   mouseMoveSpeed?: number;
-  spotlightEffect?: boolean;
 }
 
 interface RecordingConfig {

@@ -14,7 +14,7 @@ console.log(`
 ║                                                           ║
 ║  🎬 Cinematic Demo Generator                             ║
 ║                                                           ║
-║  Professional demos with zoom, glow & camera effects     ║
+║  Professional demos with zoom & camera effects          ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 `);
@@ -241,22 +241,12 @@ async function createDemoFromConfig(config, configPath) {
         
         try {
           if (page) {
-            // In lite mode, we only update camera follow, not cursor
-            if (page._useLiteMode) {
-              await page.evaluate(({ x, y }) => {
-                if (window.cinematicControl && window.cinematicControl.updateCameraFollow) {
-                  window.cinematicControl.updateCameraFollow(x, y);
-                }
-              }, { x, y });
-            } else {
-              // Full mode - update custom cursor
-              await page.evaluate(({ x, y }) => {
-                if (window.cinematicControl) {
-                  window.cinematicControl.moveCursor(x, y);
-                  window.cinematicControl.updateCameraFollow();
-                }
-              }, { x, y });
-            }
+            // Update camera follow based on mouse position
+            await page.evaluate(({ x, y }) => {
+              if (window.cinematicControl && window.cinematicControl.updateCameraFollow) {
+                window.cinematicControl.updateCameraFollow(x, y);
+              }
+            }, { x, y });
             
             await page.mouse.move(x, y);
             await page.waitForTimeout(stepDelay);
@@ -351,21 +341,12 @@ async function createDemoFromConfig(config, configPath) {
           
           // Click animation
           if (page) {
-            if (page._useLiteMode) {
-              // In lite mode, pass coordinates for click animation
-              await page.evaluate(({ x, y }) => {
-                if (window.cinematicControl && window.cinematicControl.animateClick) {
-                  window.cinematicControl.animateClick(x, y);
-                }
-              }, { x: targetX, y: targetY });
-            } else {
-              // Full mode uses cursor position
-              await page.evaluate(() => {
-                if (window.cinematicControl) {
-                  window.cinematicControl.animateClick();
-                }
-              });
-            }
+            // Pass coordinates for click animation
+            await page.evaluate(({ x, y }) => {
+              if (window.cinematicControl && window.cinematicControl.animateClick) {
+                window.cinematicControl.animateClick(x, y);
+              }
+            }, { x: targetX, y: targetY });
           }
           
           // Actual click
@@ -620,12 +601,9 @@ async function createDemoFromConfig(config, configPath) {
   
   // Load and inject cinematic effects script securely
   try {
-    // Option to use lite version for better compatibility
-    const useLiteMode = process.env.CINEMATIC_LITE === 'true' || config.recording?.liteMode;
-    const scriptFile = useLiteMode ? 'cinematicEffectsLite.js' : 'cinematicEffects.js';
-    
+    // Always use lite version (Playwright's native cursor with effects)
     const cinematicEffectsScript = fs.readFileSync(
-      path.join(__dirname, 'lib', scriptFile), 
+      path.join(__dirname, 'lib', 'cinematicEffectsLite.js'), 
       'utf8'
     );
     
@@ -646,10 +624,9 @@ async function createDemoFromConfig(config, configPath) {
       throw new Error('Unsafe content detected in cinematic effects script');
     }
     
-    // Store the script and mode for later injection
+    // Store the script for later injection
     page._cinematicEffectsScript = cinematicEffectsScript;
-    page._useLiteMode = useLiteMode;
-    console.log(`✅ Cinematic effects script prepared (${useLiteMode ? 'lite' : 'full'} mode)`);
+    console.log('✅ Cinematic effects script prepared');
   } catch (error) {
     console.error('❌ Failed to load cinematic effects:', error.message);
     throw error;
@@ -719,123 +696,27 @@ async function createDemoFromConfig(config, configPath) {
       console.log(`📝 ${config.description}`);
     }
     
-    // Ensure cursor is visible after all loading
-    await page.evaluate(() => {
-      if (window.cinematicControl && window.cinematicControl.cursor) {
-        const cursor = window.cinematicControl.cursor;
-        cursor.style.display = 'block';
-        cursor.style.visibility = 'visible';
-        cursor.style.opacity = '1';
-        console.log('[Demo] Cursor visibility enforced');
-      }
-    });
     
-    // Wait for cinematicControl to be initialized (with timeout)
+    // Wait for cinematicControl to be initialized
+    await page.waitForTimeout(500);
+    
+    // Verify cinematic control is ready
     const controlReady = await page.evaluate(() => {
-      return new Promise((resolve) => {
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds total
-        const checkControl = () => {
-          if (window.cinematicControl && window.cinematicControl.cursor) {
-            console.log('[Demo] CinematicControl is ready');
-            resolve(true);
-          } else if (attempts++ < maxAttempts) {
-            console.log(`[Demo] Waiting for cinematicControl... (attempt ${attempts})`);
-            setTimeout(checkControl, 100);
-          } else {
-            console.error('[Demo] CinematicControl failed to initialize after 5 seconds');
-            resolve(false);
-          }
-        };
-        checkControl();
-      });
+      return !!window.cinematicControl;
     });
     
     if (!controlReady) {
-      console.error('❌ Cinematic control not initialized properly!');
-      // Try direct execution of the IIFE
-      await page.evaluate(() => {
-        console.log('[Demo] Attempting direct IIFE execution...');
-        // The script should have already created the function
-        const scriptEl = document.querySelector('script[src*="cinematicEffects"]');
-        if (scriptEl) {
-          console.log('[Demo] Found script element, re-evaluating...');
-          eval(scriptEl.textContent);
-        }
-      });
-      
-      // Wait and check again
-      await page.waitForTimeout(1000);
-      
-      const retryCheck = await page.evaluate(() => {
-        return !!(window.cinematicControl && window.cinematicControl.cursor);
-      });
-      
-      if (!retryCheck) {
-        console.error('❌ Failed to initialize cinematic effects after retry');
-        // Create a minimal fallback cursor
-        console.log('🔧 Creating fallback cursor...');
-        await page.evaluate(() => {
-          // Create a simple cursor without all the effects
-          const cursor = document.createElement('div');
-          cursor.id = 'fallback-cursor';
-          cursor.style.cssText = `
-            position: fixed !important;
-            width: 20px !important;
-            height: 20px !important;
-            background: radial-gradient(circle, #ff3366 0%, #ff336688 50%, transparent 70%) !important;
-            border-radius: 50% !important;
-            pointer-events: none !important;
-            z-index: 2147483647 !important;
-            transform: translate(-10px, -10px) !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-          `;
-          document.documentElement.appendChild(cursor);
-          
-          // Create minimal control object
-          window.cinematicControl = {
-            cursor: cursor,
-            moveCursor: function(x, y) {
-              cursor.style.left = x + 'px';
-              cursor.style.top = y + 'px';
-            },
-            animateClick: function() {
-              cursor.style.transform = 'translate(-10px, -10px) scale(0.8)';
-              setTimeout(() => {
-                cursor.style.transform = 'translate(-10px, -10px) scale(1)';
-              }, 200);
-            },
-            zoomTo: function() {}, // No-op
-            resetZoom: function() {}, // No-op
-            highlightElement: function() {}, // No-op
-            enableCameraFollow: function() {}, // No-op
-            updateCameraFollow: function() {} // No-op
-          };
-          
-          console.log('[Demo] Fallback cursor created');
-        });
-      } else {
-        console.log('✅ Cinematic control initialized on retry');
-      }
+      console.error('❌ Cinematic control not initialized!');
+      throw new Error('Failed to initialize cinematic effects');
     }
     
-    // Initialize position and configure effects
+    console.log('✅ Cinematic control initialized');
+    
+    // Configure effects
     await page.evaluate((effects) => {
       if (window.cinematicControl) {
-        window.cinematicControl.moveCursor(960, 540);
         if (effects.cameraFollow) {
           window.cinematicControl.enableCameraFollow(true, effects.zoomLevel);
-        }
-        // Debug: Check cursor visibility
-        const cursor = document.getElementById('demo-cursor');
-        if (cursor) {
-          console.log('Cursor element found:', cursor.style.left, cursor.style.top);
-          console.log('Cursor display:', window.getComputedStyle(cursor).display);
-          console.log('Cursor visibility:', window.getComputedStyle(cursor).visibility);
-        } else {
-          console.error('Cursor element not found!');
         }
       }
     }, config.effects);
@@ -843,31 +724,6 @@ async function createDemoFromConfig(config, configPath) {
     // Wait for cursor to be visible
     await page.waitForTimeout(500);
     
-    // Start periodic cursor visibility check
-    const cursorCheckInterval = setInterval(async () => {
-      try {
-        if (page && !page.isClosed()) {
-          await page.evaluate(() => {
-            const cursor = document.getElementById('demo-cursor');
-            if (!cursor) {
-              console.error('[Demo] Cursor element missing!');
-            } else {
-              const style = window.getComputedStyle(cursor);
-              if (style.display === 'none' || style.visibility === 'hidden') {
-                console.error('[Demo] Cursor is hidden!', {
-                  display: style.display,
-                  visibility: style.visibility
-                });
-              }
-            }
-          });
-        } else {
-          clearInterval(cursorCheckInterval);
-        }
-      } catch (e) {
-        clearInterval(cursorCheckInterval);
-      }
-    }, 1000);
     
     // Optional entry point interaction
     if (config.entry.selector) {
@@ -996,10 +852,9 @@ try {
         console.log('\n✨ All demos completed!');
         console.log('\n🎬 Professional effects included:');
         console.log('   • Configuration-driven interactions');
-        console.log('   • Glowing mouse cursor with pulse effect');
+        console.log('   • Native cursor with smooth movement');
         console.log('   • Dynamic zoom in/out on interactions');
         console.log('   • Smooth camera panning following mouse');
-        console.log('   • Spotlight effect highlighting cursor area');
         console.log('   • Element highlighting on focus');
         console.log('   • Professional click animations');
         console.log('   • Cinematic transitions between scenes');
