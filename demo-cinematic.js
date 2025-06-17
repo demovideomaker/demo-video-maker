@@ -225,8 +225,8 @@ async function createDemoFromConfig(config, configPath) {
     try {
       for (let i = 0; i <= steps; i++) {
         // Check if page is still alive
-        if (page.isClosed()) {
-          console.warn('⚠️  Page closed during animation, stopping cinematicMove');
+        if (!page || page.isClosed()) {
+          console.warn('⚠️  Page closed or not initialized during animation, stopping cinematicMove');
           break;
         }
         
@@ -240,15 +240,17 @@ async function createDemoFromConfig(config, configPath) {
         const y = mouseY + (targetY - mouseY) * ease;
         
         try {
-          await page.evaluate(({ x, y }) => {
+          if (page) {
+            await page.evaluate(({ x, y }) => {
             if (window.cinematicControl) {
               window.cinematicControl.moveCursor(x, y);
               window.cinematicControl.updateCameraFollow();
             }
-          }, { x, y });
-          
-          await page.mouse.move(x, y);
-          await page.waitForTimeout(stepDelay);
+            }, { x, y });
+            
+            await page.mouse.move(x, y);
+            await page.waitForTimeout(stepDelay);
+          }
         } catch (error) {
           if (error.message.includes('Target page, context or browser has been closed')) {
             console.warn('⚠️  Browser closed during animation, stopping cinematicMove');
@@ -271,6 +273,7 @@ async function createDemoFromConfig(config, configPath) {
   
   async function zoomToElement(selector, scale = 2, padding = 50) {
     try {
+      if (!page) return false;
       const element = await page.$(selector);
       if (element) {
         const box = await element.boundingBox();
@@ -280,15 +283,17 @@ async function createDemoFromConfig(config, configPath) {
           
           console.log(`   🔍 Zooming to ${selector} (${scale}x)`);
           
-          await page.evaluate(({ scale, centerX, centerY, selector }) => {
+          if (page) {
+            await page.evaluate(({ scale, centerX, centerY, selector }) => {
             const el = document.querySelector(selector);
             if (window.cinematicControl && el) {
               window.cinematicControl.highlightElement(el);
               window.cinematicControl.zoomTo(scale, centerX, centerY);
             }
-          }, { scale, centerX, centerY, selector });
-          
-          await page.waitForTimeout(1000);
+            }, { scale, centerX, centerY, selector });
+            
+            await page.waitForTimeout(1000);
+          }
           return true;
         }
       }
@@ -302,6 +307,7 @@ async function createDemoFromConfig(config, configPath) {
     console.log(`   → ${description}`);
     
     try {
+      if (!page) return false;
       const element = await page.waitForSelector(selector, { 
         state: 'visible', 
         timeout: 5000 
@@ -320,18 +326,20 @@ async function createDemoFromConfig(config, configPath) {
           
           // Move to element with cinematic motion
           await cinematicMove(targetX, targetY);
-          await page.waitForTimeout(300);
+          if (page) await page.waitForTimeout(300);
           
           // Click animation
-          await page.evaluate(() => {
-            if (window.cinematicControl) {
-              window.cinematicControl.animateClick();
-            }
-          });
+          if (page) {
+            await page.evaluate(() => {
+              if (window.cinematicControl) {
+                window.cinematicControl.animateClick();
+              }
+            });
+          }
           
           // Actual click
           await element.click();
-          await page.waitForTimeout(600);
+          if (page) await page.waitForTimeout(600);
           
           // Reset zoom if we zoomed in
           if (options.zoom) {
@@ -357,23 +365,27 @@ async function createDemoFromConfig(config, configPath) {
     console.log(`   → ${description}`);
     
     if (await cinematicClick(selector, `Focusing on ${description}`, { zoom: 2.5 })) {
-      await page.waitForTimeout(500);
+      if (page) await page.waitForTimeout(500);
       
       // Clear existing text
-      await page.keyboard.down('Control');
-      await page.keyboard.press('A');
-      await page.keyboard.up('Control');
-      await page.waitForTimeout(100);
-      await page.keyboard.press('Delete');
-      await page.waitForTimeout(300);
+      if (page) {
+        await page.keyboard.down('Control');
+        await page.keyboard.press('A');
+        await page.keyboard.up('Control');
+        await page.waitForTimeout(100);
+        await page.keyboard.press('Delete');
+        await page.waitForTimeout(300);
+      }
       
       // Type with variable speed
       for (const char of text) {
-        await page.keyboard.type(char);
-        await page.waitForTimeout(80 + Math.random() * 120);
+        if (page) {
+          await page.keyboard.type(char);
+          await page.waitForTimeout(80 + Math.random() * 120);
+        }
       }
       
-      await page.waitForTimeout(500);
+      if (page) await page.waitForTimeout(500);
       
       // Reset zoom
       await page.evaluate(() => {
@@ -407,6 +419,11 @@ async function createDemoFromConfig(config, configPath) {
   // Configuration-driven interaction executor
   async function executeInteraction(interaction, index) {
     const stepPrefix = `   Step ${index + 1}:`;
+    
+    if (!page) {
+      console.error(`${stepPrefix} Page not initialized`);
+      return;
+    }
     
     try {
       // Wait before moving cursor
