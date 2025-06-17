@@ -88,10 +88,8 @@ describe('Comprehensive Configuration Tests', () => {
         effects: {
           cameraFollow: false,
           zoomLevel: 1.8,
-          glowEffects: false,
           clickAnimations: true,
-          mouseMoveSpeed: 100,
-          spotlightEffect: false
+          mouseMoveSpeed: 100
         },
         recording: {
           duration: 45000,
@@ -147,10 +145,8 @@ describe('Comprehensive Configuration Tests', () => {
       // Verify effects
       expect(result.effects.cameraFollow).toBe(false);
       expect(result.effects.zoomLevel).toBe(1.8);
-      expect(result.effects.glowEffects).toBe(false);
       expect(result.effects.clickAnimations).toBe(true);
       expect(result.effects.mouseMoveSpeed).toBe(100);
-      expect(result.effects.spotlightEffect).toBe(false);
 
       // Verify recording
       expect(result.recording.duration).toBe(45000);
@@ -430,17 +426,13 @@ describe('Comprehensive Configuration Tests', () => {
     it('should handle all boolean effect flags', () => {
       const effects = {
         cameraFollow: "true", // String instead of boolean
-        glowEffects: 1, // Number instead of boolean
         clickAnimations: null, // Null
-        spotlightEffect: undefined // Undefined
       };
 
       const result = configLoader.validateEffects(effects);
       
-      expect(result.cameraFollow).toBe(true); // Converted
-      expect(result.glowEffects).toBe(true); // Converted
-      expect(result.clickAnimations).toBe(true); // Default
-      expect(result.spotlightEffect).toBe(true); // Default
+      expect(result.cameraFollow).toBe(true); // Converted to boolean
+      expect(result.clickAnimations).toBe(true); // Default value
     });
   });
 

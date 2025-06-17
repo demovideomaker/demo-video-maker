@@ -124,7 +124,7 @@ app.listen(port, () => {
       effects: {
         cameraFollow: true,
         zoomLevel: 1.5,
-        glowEffects: true
+        clickAnimations: true
       },
       recording: {
         duration: 10000,

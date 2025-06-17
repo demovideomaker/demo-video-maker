@@ -9,7 +9,7 @@
   "scripts": {
     "demo": "node demo-cinematic.js",
     "start-demo-app": "cd demo-app && npm run dev",
-    "test": "jest tests/configLoader.test.js tests/config-comprehensive.test.js tests/cursor-persistence.test.js",
+    "test": "jest tests/configLoader.test.js tests/config-comprehensive.test.js tests/cinematic-effects-lite.test.js",
     "test:watch": "jest --watch",
     "test:cli": "jest tests/demo-cinematic.test.js",
     "test:pre-publish": "jest tests/pre-publish.test.js --forceExit",
