@@ -101,6 +101,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial fixes for MODULE_NOT_FOUND error
 - Comprehensive test suite foundation
 
+## [1.0.16] - 2025-06-17
+
+### Fixed
+- Fixed navigation timeout errors for Single Page Applications (SPAs)
+- Changed from 'networkidle' to 'domcontentloaded' wait strategy
+- Added navigation detection after click interactions
+- Removed redundant wait states that were causing timing issues
+
+### Changed
+- Improved navigation handling for apps with persistent connections (WebSockets, polling)
+- Better error recovery with fallback navigation strategies
+- Simplified page load detection for better compatibility
+
 ## [Unreleased]
 
 ### Planned
