@@ -772,6 +772,11 @@ async function createDemoFromConfig(config, configPath) {
     }
   }
 
+  } catch (setupError) {
+    console.error('\n❌ Error during browser setup:', setupError.message);
+    throw setupError;
+  }
+
   // Start the demo
   try {
     // Navigate to entry point with URL validation
@@ -843,8 +848,39 @@ async function createDemoFromConfig(config, configPath) {
     
     console.log(`\n✅ Demo "${config.name}" complete!`);
     
+    // Wait for video processing
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Find and rename video
+    const videos = fs.readdirSync(videosDir).filter(f => f.endsWith('.webm'));
+    if (videos.length > 0) {
+      const latest = videos.sort((a, b) => 
+        fs.statSync(path.join(videosDir, b)).mtime - 
+        fs.statSync(path.join(videosDir, a)).mtime
+      )[0];
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      const baseName = config.recording.outputName || 
+                       config.name.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
+                       'demo';
+      const finalName = `${baseName}-${timestamp}.webm`;
+      
+      fs.renameSync(
+        path.join(videosDir, latest),
+        path.join(videosDir, finalName)
+      );
+      
+      console.log(`\n🎥 Video saved as: ${finalName}`);
+      console.log(`📁 Location: ${videosDir}`);
+      
+      return finalName;
+    }
+    
+    return null;
+    
   } catch (error) {
     console.error('\n❌ Error during demo:', error.message);
+    return null;
   } finally {
     // Ensure cleanup always happens regardless of success or failure
     try {
@@ -864,57 +900,32 @@ async function createDemoFromConfig(config, configPath) {
       console.error('❌ Cleanup error:', cleanupError.message);
     }
   }
-  
-  // Wait for video processing
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // Find and rename video
-  const videos = fs.readdirSync(videosDir).filter(f => f.endsWith('.webm'));
-  if (videos.length > 0) {
-    const latest = videos.sort((a, b) => 
-      fs.statSync(path.join(videosDir, b)).mtime - 
-      fs.statSync(path.join(videosDir, a)).mtime
-    )[0];
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-    const baseName = config.recording.outputName || 
-                     config.name.toLowerCase().replace(/[^a-z0-9]/g, '-') || 
-                     'demo';
-    const finalName = `${baseName}-${timestamp}.webm`;
-    
-    fs.renameSync(
-      path.join(videosDir, latest),
-      path.join(videosDir, finalName)
-    );
-    
-    console.log(`\n🎥 Video saved as: ${finalName}`);
-    console.log(`📁 Location: ${videosDir}`);
-    
-    return finalName;
-  }
-  
-  return null;
 }
 
 // Check if demo app is running  
 const http = require('http');
-http.get(baseUrl, (res) => {
-  if (res.statusCode === 200 || res.statusCode === 404) {
-    console.log('✅ Demo app detected\n');
-    createConfigDrivenDemo().then(() => {
-      console.log('\n✨ All demos completed!');
-      console.log('\n🎬 Professional effects included:');
-      console.log('   • Configuration-driven interactions');
-      console.log('   • Glowing mouse cursor with pulse effect');
-      console.log('   • Dynamic zoom in/out on interactions');
-      console.log('   • Smooth camera panning following mouse');
-      console.log('   • Spotlight effect highlighting cursor area');
-      console.log('   • Element highlighting on focus');
-      console.log('   • Professional click animations');
-      console.log('   • Cinematic transitions between scenes');
-    }).catch(console.error);
-  }
-}).on('error', () => {
-  console.error(`\n❌ Demo app is not running on ${baseUrl}`);
+try {
+  http.get(baseUrl, (res) => {
+    if (res.statusCode === 200 || res.statusCode === 404) {
+      console.log('✅ Demo app detected\n');
+      createConfigDrivenDemo().then(() => {
+        console.log('\n✨ All demos completed!');
+        console.log('\n🎬 Professional effects included:');
+        console.log('   • Configuration-driven interactions');
+        console.log('   • Glowing mouse cursor with pulse effect');
+        console.log('   • Dynamic zoom in/out on interactions');
+        console.log('   • Smooth camera panning following mouse');
+        console.log('   • Spotlight effect highlighting cursor area');
+        console.log('   • Element highlighting on focus');
+        console.log('   • Professional click animations');
+        console.log('   • Cinematic transitions between scenes');
+      }).catch(console.error);
+    }
+  }).on('error', () => {
+    console.error(`\n❌ Demo app is not running on ${baseUrl}`);
+    console.error('   Please start it with: npm run start-demo-app\n');
+  });
+} catch (error) {
+  console.error(`\n❌ Error checking demo app: ${error.message}`);
   console.error('   Please start it with: npm run start-demo-app\n');
-});
+}
