@@ -13,6 +13,7 @@
     "test:watch": "jest --watch",
     "test:cli": "jest tests/demo-cinematic.test.js",
     "test:pre-publish": "jest tests/pre-publish.test.js --forceExit",
+    "test:e2e": "jest tests/e2e-demo.test.js --forceExit",
     "test:all": "npm test && npm run test:cli && npm run test:pre-publish",
     "build": "mkdir -p dist && cp demo-cinematic.js dist/ && cp -r lib dist/",
     "prepublishOnly": "npm run test:all && npm run build",
