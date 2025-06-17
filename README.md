@@ -902,6 +902,54 @@ npm run test:coverage
 npm audit
 ```
 
+## 🔧 Troubleshooting
+
+### Cursor Not Appearing in React/Next.js Apps
+
+If the custom cursor disappears in React applications, you can use **Lite Mode** which leverages Playwright's built-in cursor while maintaining all cinematic effects:
+
+```bash
+# Enable lite mode via environment variable
+CINEMATIC_LITE=true demo-video-maker --port 3000
+
+# Or add to your demo.json configuration
+{
+  "recording": {
+    "liteMode": true
+  }
+}
+```
+
+**Lite Mode Features:**
+- ✅ Uses Playwright's native cursor (more reliable)
+- ✅ Maintains zoom effects and camera follow
+- ✅ Keeps element highlighting
+- ✅ Preserves click animations
+- ✅ Better compatibility with React hydration
+
+**When to Use Lite Mode:**
+- React apps with strict hydration rules
+- Next.js applications
+- Sites with Content Security Policies
+- When the custom cursor flashes and disappears
+
+### Other Common Issues
+
+**Page Not Loading:**
+- Ensure your app is running on the specified port
+- Check for HTTPS/SSL certificate issues
+- Verify no authentication is blocking access
+
+**Selectors Not Found:**
+- Use stable selectors (data-testid, aria-label)
+- Add `waitTime` to interactions for dynamic content
+- Enable `skipIfNotFound` for optional elements
+
+**Video Output Issues:**
+- Ensure write permissions in output directory
+- Check available disk space
+- Verify ffmpeg is available for video processing
+
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.

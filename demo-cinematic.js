@@ -241,12 +241,22 @@ async function createDemoFromConfig(config, configPath) {
         
         try {
           if (page) {
-            await page.evaluate(({ x, y }) => {
-            if (window.cinematicControl) {
-              window.cinematicControl.moveCursor(x, y);
-              window.cinematicControl.updateCameraFollow();
+            // In lite mode, we only update camera follow, not cursor
+            if (page._useLiteMode) {
+              await page.evaluate(({ x, y }) => {
+                if (window.cinematicControl && window.cinematicControl.updateCameraFollow) {
+                  window.cinematicControl.updateCameraFollow(x, y);
+                }
+              }, { x, y });
+            } else {
+              // Full mode - update custom cursor
+              await page.evaluate(({ x, y }) => {
+                if (window.cinematicControl) {
+                  window.cinematicControl.moveCursor(x, y);
+                  window.cinematicControl.updateCameraFollow();
+                }
+              }, { x, y });
             }
-            }, { x, y });
             
             await page.mouse.move(x, y);
             await page.waitForTimeout(stepDelay);
@@ -341,11 +351,21 @@ async function createDemoFromConfig(config, configPath) {
           
           // Click animation
           if (page) {
-            await page.evaluate(() => {
-              if (window.cinematicControl) {
-                window.cinematicControl.animateClick();
-              }
-            });
+            if (page._useLiteMode) {
+              // In lite mode, pass coordinates for click animation
+              await page.evaluate(({ x, y }) => {
+                if (window.cinematicControl && window.cinematicControl.animateClick) {
+                  window.cinematicControl.animateClick(x, y);
+                }
+              }, { x: targetX, y: targetY });
+            } else {
+              // Full mode uses cursor position
+              await page.evaluate(() => {
+                if (window.cinematicControl) {
+                  window.cinematicControl.animateClick();
+                }
+              });
+            }
           }
           
           // Actual click
@@ -600,8 +620,12 @@ async function createDemoFromConfig(config, configPath) {
   
   // Load and inject cinematic effects script securely
   try {
+    // Option to use lite version for better compatibility
+    const useLiteMode = process.env.CINEMATIC_LITE === 'true' || config.recording?.liteMode;
+    const scriptFile = useLiteMode ? 'cinematicEffectsLite.js' : 'cinematicEffects.js';
+    
     const cinematicEffectsScript = fs.readFileSync(
-      path.join(__dirname, 'lib', 'cinematicEffects.js'), 
+      path.join(__dirname, 'lib', scriptFile), 
       'utf8'
     );
     
@@ -622,9 +646,10 @@ async function createDemoFromConfig(config, configPath) {
       throw new Error('Unsafe content detected in cinematic effects script');
     }
     
-    // Store the script for later injection
+    // Store the script and mode for later injection
     page._cinematicEffectsScript = cinematicEffectsScript;
-    console.log('✅ Cinematic effects script prepared');
+    page._useLiteMode = useLiteMode;
+    console.log(`✅ Cinematic effects script prepared (${useLiteMode ? 'lite' : 'full'} mode)`);
   } catch (error) {
     console.error('❌ Failed to load cinematic effects:', error.message);
     throw error;
