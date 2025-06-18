@@ -45,15 +45,21 @@ demo-video-maker --init
 
 ### 3. Run the Demo
 
-```bash
-# Start your web app (in a separate terminal)
-npm start
+**Important:** Your web application must be running before generating demos!
 
-# Generate the demo video
+```bash
+# Step 1: Start your web app (in a separate terminal)
+npm start  # or npm run dev, yarn start, etc.
+
+# Step 2: Generate the demo video (default port is 3000)
 demo-video-maker
 
-# If your app runs on a different port
-demo-video-maker --port 3000
+# If your app runs on a different port, specify it:
+demo-video-maker --port 8080
+demo-video-maker -p 3001
+
+# Or provide the full URL:
+demo-video-maker . http://localhost:4000
 ```
 
 That's it! Your demo video will be saved in `demo-output-cinematic-[timestamp]/`
@@ -532,19 +538,24 @@ demo-video-maker --help
 ### Command Line Options
 
 ```bash
-# Specify custom port (default: 3003)
-demo-video-maker --port 3000
-demo-video-maker -p 8080
+# Default behavior (assumes app running on port 3000)
+demo-video-maker
+
+# Specify custom port
+demo-video-maker --port 8080
+demo-video-maker -p 3001
 
 # Run for specific directory with custom port
-demo-video-maker --port 3000 ./src/features
+demo-video-maker --port 8080 ./src/features
 
 # Use custom base URL (when app runs on different port/host)
-demo-video-maker . http://localhost:8080
+demo-video-maker . http://localhost:4200
 
 # Full custom setup
-demo-video-maker ./my-app http://localhost:4000
+demo-video-maker ./my-app http://localhost:5173
 ```
+
+**Note:** The default port is 3000. Always ensure your application is running before executing demo-video-maker.
 
 ## 🛠️ Integration Examples
 

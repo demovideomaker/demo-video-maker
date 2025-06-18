@@ -24,7 +24,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
   const parsed = {
     init: false,
-    port: 3003,
+    port: 3000,
     projectPath: null,
     baseUrl: null,
     help: false
@@ -43,10 +43,10 @@ function parseArgs() {
           parsed.port = port;
           i++; // skip next arg as it's the port value
         } else {
-          console.warn('⚠️  Invalid port number, using default 3003');
+          console.warn('⚠️  Invalid port number, using default 3000');
         }
       } else {
-        console.warn('⚠️  Port flag requires a value, using default 3003');
+        console.warn('⚠️  Port flag requires a value, using default 3000');
       }
     } else if (arg === '--help' || arg === '-h') {
       parsed.help = true;
@@ -72,7 +72,7 @@ Usage: demo-video-maker [options] [project-path] [base-url]
 
 Options:
   --init              Create a sample demo.json configuration file
-  --port, -p <port>   Port number where your app is running (default: 3003)
+  --port, -p <port>   Port number where your app is running (default: 3000)
   --help, -h          Show this help message
 
 Examples:
