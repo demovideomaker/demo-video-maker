@@ -1,0 +1,77 @@
+{
+  "name": "Feature Showcase Flow",
+  "description": "Highlight individual features with dramatic zoom transitions",
+  "entry": {
+    "url": "/cinematic-showcase",
+    "selector": "[data-testid='journey']",
+    "waitTime": 1000
+  },
+  "effects": {
+    "cameraFollow": true,
+    "attentionPattern": false,
+    "mouseMoveSpeed": 55,
+    "zoomLevel": 1.4
+  },
+  "interactions": [
+    {
+      "type": "scroll",
+      "selector": "[data-testid='journey']",
+      "waitBeforeMove": 500,
+      "waitAfter": 1000,
+      "zoomLevel": 1.3,
+      "description": "Scroll to features section"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='feature-1']",
+      "waitBeforeMove": 800,
+      "waitAfter": 1500,
+      "zoomLevel": 2.2,
+      "description": "Focus on cinematic movements"
+    },
+    {
+      "type": "hover",
+      "selector": ".feature-grid",
+      "waitBeforeMove": 400,
+      "waitAfter": 800,
+      "zoomLevel": 1.2,
+      "description": "Pull back to show all features"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='feature-2']",
+      "waitBeforeMove": 600,
+      "waitAfter": 1500,
+      "zoomLevel": 2.3,
+      "description": "Focus on precise control"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='feature-3']",
+      "waitBeforeMove": 600,
+      "waitAfter": 1500,
+      "zoomLevel": 2.3,
+      "description": "Focus on visual polish"
+    },
+    {
+      "type": "scroll",
+      "selector": "[data-testid='main-cta']",
+      "waitBeforeMove": 800,
+      "waitAfter": 1000,
+      "zoomLevel": 1.5,
+      "description": "Scroll to call-to-action"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='main-cta']",
+      "waitBeforeMove": 500,
+      "waitAfter": 2000,
+      "zoomLevel": 2.5,
+      "description": "Emphasize the CTA button"
+    }
+  ],
+  "recording": {
+    "duration": 20000,
+    "outputName": "feature-showcase-flow"
+  }
+}

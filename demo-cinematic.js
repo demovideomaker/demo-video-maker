@@ -559,8 +559,8 @@ async function createDemoFromConfig(config, configPath) {
       }
       
       // Wait after action
-      if (interaction.waitAfterClick) {
-        await page.waitForTimeout(interaction.waitAfterClick);
+      if (interaction.waitAfter) {
+        await page.waitForTimeout(interaction.waitAfter);
       }
       
       // Wait between steps
@@ -759,7 +759,7 @@ async function createDemoFromConfig(config, configPath) {
     });
     
     // Opening attention pattern (optional)
-    if (config.interactions.length > 0) {
+    if (config.interactions.length > 0 && config.effects?.attentionPattern !== false) {
       console.log('✨ Drawing opening attention pattern');
       await drawAttentionPattern();
       await page.waitForTimeout(1000);
@@ -772,7 +772,7 @@ async function createDemoFromConfig(config, configPath) {
     }
     
     // Final flourish (optional closing pattern)
-    if (config.interactions.length > 0) {
+    if (config.interactions.length > 0 && config.effects?.attentionPattern !== false) {
       console.log('\n🎬 Final Scene: Closing');
       await drawAttentionPattern();
       

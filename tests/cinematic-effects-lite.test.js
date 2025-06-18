@@ -25,10 +25,11 @@ describe('Cinematic Effects Lite Tests', () => {
       expect(cinematicEffectsScript).toContain('transform: scale(1)');
     });
 
-    it('should not create any cursor elements', () => {
-      expect(cinematicEffectsScript).not.toContain('cursor.id = \'demo-cursor\'');
-      expect(cinematicEffectsScript).not.toContain('cursor-glow');
-      expect(cinematicEffectsScript).not.toContain('cursor-arrow');
+    it('should create a visual cursor element for recordings', () => {
+      expect(cinematicEffectsScript).toContain('cursor.id = \'demo-cursor\'');
+      expect(cinematicEffectsScript).toContain('width: 16px');
+      expect(cinematicEffectsScript).toContain('height: 16px');
+      expect(cinematicEffectsScript).toContain('border-radius: 50%');
     });
 
     it('should have highlight element styles', () => {

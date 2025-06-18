@@ -1,0 +1,52 @@
+{
+  "name": "Cinematic Scroll Effect",
+  "description": "Dynamic zoom scroll from top-left badge to bottom-right accent",
+  "entry": {
+    "url": "/cinematic-showcase",
+    "waitTime": 150
+  },
+  "effects": {
+    "cameraFollow": true,
+    "attentionPattern": false,
+    "mouseMoveSpeed": 45,
+    "zoomLevel": 1.6
+  },
+  "interactions": [
+    {
+      "type": "hover",
+      "selector": "[data-testid='hero-badge']",
+      "waitBeforeMove": 100,
+      "waitAfter": 300,
+      "zoomLevel": 2.5,
+      "description": "Start at top-left badge with zoom"
+    },
+    {
+      "type": "hover",
+      "selector": ".hero-content",
+      "waitBeforeMove": 200,
+      "waitAfter": 600,
+      "zoomLevel": 1,
+      "description": "Pull back to show hero title"
+    },
+    {
+      "type": "scroll",
+      "selector": "[data-testid='cta']",
+      "waitBeforeMove": 400,
+      "waitAfter": 800,
+      "zoomLevel": 1.0,
+      "description": "Scroll to bottom while fully zoomed out"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='bottom-accent']",
+      "waitBeforeMove": 600,
+      "waitAfter": 2000,
+      "zoomLevel": 2.8,
+      "description": "Zoom in on bottom-right accent"
+    }
+  ],
+  "recording": {
+    "duration": 15000,
+    "outputName": "cinematic-scroll-effect"
+  }
+}

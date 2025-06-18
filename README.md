@@ -15,9 +15,10 @@ Transform your web application into professional demo videos with cinematic mous
 - 🎯 **Configuration-Driven**: JSON-based demo definitions for precise control
 - 📷 **Camera Follow**: Dynamic zoom and pan that follows mouse movement  
 - ✨ **Visual Effects**: Click animations, element highlighting, and smooth transitions
-- 🎬 **Cinematic Quality**: Professional 1920x1080 HD video output
+- 🎬 **Cinematic Quality**: Professional 1920x1080 HD video output with visible cursor
 - 🔧 **Highly Configurable**: Customize timing, effects, interactions, and visual style
-- 🖱️ **Realistic Interactions**: Click, hover, type, scroll, navigate with natural timing
+- 🖱️ **Visible Cursor**: Custom cursor that appears in video recordings
+- 🎭 **Viewport Protection**: Smart zoom bounds prevent showing browser edges
 - 🚀 **Multiple Demos**: Create separate demos for different features automatically
 - 🛡️ **Enterprise Security**: Path validation, input sanitization, memory management
 - 🎯 **Simple CLI**: Just run `demo-video-maker` in your project directory
@@ -144,12 +145,14 @@ Define the sequence of user interactions to demonstrate.
   "type": "click",
   "selector": "[data-testid='submit-button']",
   "waitBeforeMove": 1000,
-  "waitAfterClick": 1500,
+  "waitAfter": 1500,  // Time to wait after action completes
   "zoomLevel": 2.0,
   "skipIfNotFound": false,
   "description": "Submit the form"
 }
 ```
+
+**Note:** Each click interaction includes a brief pause (300-800ms) before execution to simulate natural user behavior.
 
 #### Hover Interaction
 ```json
@@ -157,7 +160,7 @@ Define the sequence of user interactions to demonstrate.
   "type": "hover",
   "selector": ".tooltip-trigger",
   "waitBeforeMove": 800,
-  "waitAfterClick": 1200,
+  "waitAfter": 1200,  // Time to wait after hovering
   "zoomLevel": 1.8,
   "description": "Show tooltip on hover"
 }
@@ -170,11 +173,13 @@ Define the sequence of user interactions to demonstrate.
   "selector": "input[name='email']",
   "text": "user@example.com",
   "waitBeforeMove": 500,
-  "waitAfterClick": 2000,
+  "waitAfter": 2000,  // Time to wait after typing completes
   "zoomLevel": 1.9,
   "description": "Enter email address"
 }
 ```
+
+**Note:** Text is typed character-by-character with 80-200ms random delays between keystrokes for realistic typing animation.
 
 #### Scroll Interaction
 ```json
@@ -182,7 +187,7 @@ Define the sequence of user interactions to demonstrate.
   "type": "scroll",
   "selector": "#bottom-section",
   "waitBeforeMove": 800,
-  "waitAfterClick": 1500,
+  "waitAfter": 1500,  // Time to wait after scroll completes
   "description": "Scroll to bottom section"
 }
 ```
@@ -217,17 +222,26 @@ Control the cinematic visual effects and camera behavior.
     "cameraFollow": true,           // Enable dynamic camera following
     "zoomLevel": 1.6,              // Default zoom level (1.0-5.0)
     "clickAnimations": true,       // Ripple effects on clicks
-    "mouseMoveSpeed": 60           // Mouse movement speed (10-200)
+    "mouseMoveSpeed": 60,          // Mouse movement speed (10-200)
+    "attentionPattern": true       // Figure-8 intro/outro animation (default: true)
   }
 }
 ```
 
+**Note:** The `attentionPattern` creates a figure-8 mouse movement at the beginning and end of the demo, adding ~5 seconds to the total video duration.
+
 | Property | Type | Default | Range | Description |
 |----------|------|---------|-------|-------------|
-| `cameraFollow` | boolean | `true` | - | Enable dynamic zoom and camera following |
+| `cameraFollow` | boolean | `true` | - | Enable dynamic zoom and camera following with 150ms transitions |
 | `zoomLevel` | number | `1.6` | `1.0-5.0` | Default zoom level for interactions |
 | `clickAnimations` | boolean | `true` | - | Show click ripple animations |
 | `mouseMoveSpeed` | number | `60` | `10-200` | Mouse movement speed (steps per second) |
+| `attentionPattern` | boolean | `true` | - | Show figure-8 pattern at start/end (adds ~5s) |
+
+**Zoom Behavior:**
+- Zoom values are automatically clamped to a minimum of 1.0 to prevent viewport edges from showing
+- When zoomed in, camera panning is bounded to keep content within the viewport
+- The page background is set to dark (#0a0a0a) to blend with any edge cases
 
 ### ⏱️ Timing Configuration
 
@@ -239,10 +253,19 @@ Fine-tune the timing and pacing of interactions.
     "waitBeforeMove": 1000,        // Delay before moving mouse (ms)
     "waitAfterClick": 1500,        // Delay after clicking (ms)
     "waitBetweenSteps": 800,       // Delay between interaction steps (ms)
-    "pageLoadWait": 2000           // Wait time after navigation (ms)
+    "pageLoadWait": 2000,          // Wait time after navigation (ms)
+    "typingSpeed": [80, 200]       // Min/max delay between keystrokes (ms)
   }
 }
 ```
+
+**Important Timing Notes:**
+- The actual video duration may exceed the configured `duration` due to:
+  - Attention pattern animations (~5s each at start/end)
+  - Camera follow transitions (150ms per movement)
+  - Accumulated wait times between interactions
+  - Character-by-character typing animations
+- To minimize video length, disable `attentionPattern` and reduce wait times
 
 | Property | Type | Default | Range | Description |
 |----------|------|---------|-------|-------------|
@@ -250,6 +273,7 @@ Fine-tune the timing and pacing of interactions.
 | `waitAfterClick` | number | `1500` | `0-10000` | Milliseconds to wait after interaction |
 | `waitBetweenSteps` | number | `800` | `0-5000` | Milliseconds between interaction steps |
 | `pageLoadWait` | number | `2000` | `1000-30000` | Milliseconds to wait after page navigation |
+| `typingSpeed` | array | `[80, 200]` | `[10, 1000]` | Min/max milliseconds between keystrokes |
 
 ### 🎥 Recording Configuration
 
@@ -260,16 +284,23 @@ Control video output and recording behavior.
   "recording": {
     "duration": 45000,             // Maximum recording time (ms)
     "skipErrors": true,            // Continue recording on interaction errors
-    "outputName": "custom-name"    // Custom filename (optional)
+    "outputName": "custom-name",   // Custom filename (optional)
+    "fps": 30                     // Frame rate (default: 30)
   }
 }
 ```
 
+**Duration Note:** The `duration` field sets the maximum recording time, but the actual video may be longer due to:
+- Attention pattern animations (if enabled)
+- Accumulated wait times and transitions
+- The recording continues until all interactions complete or duration is reached
+
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `duration` | number | `30000` | Maximum recording duration in milliseconds (must be positive) |
+| `duration` | number | `30000` | Maximum recording duration in milliseconds (see note above) |
 | `skipErrors` | boolean | `true` | Continue recording if interactions fail |
 | `outputName` | string | `null` | Custom filename (auto-generated if not specified) |
+| `fps` | number | `30` | Video frame rate (10-60 fps) |
 
 ### 🔒 Security & Validation
 
@@ -613,6 +644,258 @@ Use data attributes for reliable element targeting:
 }
 ```
 
+## 🎬 Cinematic Effects Recipes
+
+Create stunning visual effects by combining zoom levels, timing, and camera movements. Try these recipes with our [cinematic showcase page](/cinematic-showcase) or adapt them to your own content.
+
+### Dynamic Zoom Scroll Effect
+
+This recipe creates a cinematic journey from a top-left element to a bottom-right element with dramatic zoom transitions.
+
+![Cinematic Scroll Demo](./demos/cinematic-scroll-demo.gif)
+
+```json
+{
+  "name": "Cinematic Scroll Effect",
+  "description": "Dynamic zoom scroll from top-left badge to bottom-right accent",
+  "entry": {
+    "url": "/cinematic-showcase",
+    "waitTime": 1500
+  },
+  "effects": {
+    "cameraFollow": true,
+    "attentionPattern": false,
+    "mouseMoveSpeed": 45,
+    "zoomLevel": 1.6
+  },
+  "interactions": [
+    {
+      "type": "hover",
+      "selector": "[data-testid='hero-badge']",
+      "waitBeforeMove": 500,
+      "waitAfterClick": 1200,
+      "zoomLevel": 2.5,
+      "description": "Start at top-left badge with zoom"
+    },
+    {
+      "type": "wait",
+      "waitTime": 800,
+      "description": "Hold the initial zoom on badge"
+    },
+    {
+      "type": "hover",
+      "selector": ".hero-content",
+      "waitBeforeMove": 200,
+      "waitAfterClick": 600,
+      "zoomLevel": 1.2,
+      "description": "Pull back to show hero title"
+    },
+    {
+      "type": "scroll",
+      "selector": "[data-testid='cta']",
+      "waitBeforeMove": 400,
+      "waitAfterClick": 800,
+      "zoomLevel": 1.0,
+      "description": "Scroll to bottom while fully zoomed out"
+    },
+    {
+      "type": "hover", 
+      "selector": "[data-testid='bottom-accent']",
+      "waitBeforeMove": 600,
+      "waitAfterClick": 2000,
+      "zoomLevel": 2.8,
+      "description": "Zoom in on bottom-right accent"
+    }
+  ],
+  "recording": {
+    "duration": 15000,
+    "outputName": "cinematic-scroll-effect"
+  }
+}
+```
+
+**Key Techniques:**
+- **Zoom transitions**: Change `zoomLevel` between interactions (2.5 → 1.0 → 2.8)
+- **Speed control**: Lower `mouseMoveSpeed` (45) for smoother camera movements
+- **Timing choreography**: Carefully tuned wait times create rhythm
+- **Fallback selectors**: Multiple selectors ensure compatibility
+
+**Tips for Best Results:**
+1. Use contrasting zoom levels (1.0 to 2.5+) for dramatic effect
+2. Keep zoom-out sections brief to maintain viewer engagement
+3. End on a high zoom level for impact
+4. Adjust `mouseMoveSpeed` based on content complexity
+5. Test with different viewport sizes
+
+### Creating Your Own Cinematic Content
+
+For the best cinematic effects, design your pages with strategic element placement:
+
+**Key Design Principles:**
+- **Corner Elements**: Place important badges or logos in corners for dramatic start/end points
+- **Clear Sections**: Use distinct sections with ample spacing for smooth scrolling
+- **Visual Hierarchy**: Create elements at different sizes for varied zoom levels
+- **Focal Points**: Add data-testid attributes to key elements for precise targeting
+
+**Example Page Structure:**
+```html
+<!-- Top-left starting point -->
+<div class="top-left-badge" data-testid="start-badge">Featured</div>
+
+<!-- Hero section for establishing shot -->
+<section class="hero" data-testid="hero">
+  <h1>Main Title</h1>
+</section>
+
+<!-- Middle sections for journey -->
+<section data-testid="features">
+  <!-- Feature cards for individual focus -->
+</section>
+
+<!-- Bottom-right ending point -->
+<div class="bottom-right-cta" data-testid="end-cta">
+  <button>Get Started</button>
+</div>
+```
+
+### Feature Spotlight Sequence
+
+Highlight individual features with smooth transitions between focused and overview shots.
+
+```json
+{
+  "name": "Feature Showcase Flow",
+  "description": "Highlight individual features with dramatic zoom transitions",
+  "entry": {
+    "url": "/cinematic-showcase",
+    "selector": "[data-testid='journey']",
+    "waitTime": 1000
+  },
+  "effects": {
+    "cameraFollow": true,
+    "attentionPattern": false,
+    "mouseMoveSpeed": 55
+  },
+  "interactions": [
+    {
+      "type": "scroll",
+      "selector": "[data-testid='journey']",
+      "zoomLevel": 1.3,
+      "description": "Scroll to features section"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='feature-1']",
+      "zoomLevel": 2.2,
+      "waitAfterClick": 1500,
+      "description": "Focus on first feature"
+    },
+    {
+      "type": "hover",
+      "selector": ".feature-grid",
+      "zoomLevel": 1.2,
+      "waitAfterClick": 800,
+      "description": "Pull back to show all features"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='feature-2']",
+      "zoomLevel": 2.3,
+      "waitAfterClick": 1500,
+      "description": "Focus on second feature"
+    }
+  ]
+}
+```
+
+### Story Progression Journey
+
+Create a narrative flow through your content with carefully timed reveals.
+
+```json
+{
+  "name": "Story Progression",
+  "description": "Cinematic journey through the entire page story",
+  "entry": {
+    "url": "/cinematic-showcase",
+    "waitTime": 1000
+  },
+  "effects": {
+    "cameraFollow": true,
+    "attentionPattern": true,
+    "mouseMoveSpeed": 50
+  },
+  "interactions": [
+    {
+      "type": "hover",
+      "selector": ".hero-title",
+      "zoomLevel": 1.8,
+      "waitAfterClick": 1500,
+      "description": "Focus on main title"
+    },
+    {
+      "type": "scroll",
+      "selector": "[data-testid='story']",
+      "zoomLevel": 1.4,
+      "description": "Continue to story section"
+    },
+    {
+      "type": "hover",
+      "selector": ".floating-element.element-2",
+      "zoomLevel": 2.1,
+      "waitAfterClick": 1000,
+      "description": "Focus on visual elements"
+    },
+    {
+      "type": "hover",
+      "selector": "[data-testid='main-cta']",
+      "zoomLevel": 2.6,
+      "waitAfterClick": 2500,
+      "description": "Final call to action"
+    }
+  ]
+}
+```
+
+### Quick Impact Demo
+
+For short, punchy demos that get straight to the point.
+
+```json
+{
+  "name": "Quick Impact",
+  "effects": {
+    "attentionPattern": false,
+    "mouseMoveSpeed": 80,
+    "cameraFollow": true
+  },
+  "timings": {
+    "waitBeforeMove": 400,
+    "waitAfterClick": 600,
+    "waitBetweenSteps": 300
+  },
+  "interactions": [
+    {
+      "type": "hover",
+      "selector": ".hero-title",
+      "zoomLevel": 2.0,
+      "waitAfterClick": 800
+    },
+    {
+      "type": "scroll",
+      "selector": "[data-testid='main-cta']",
+      "zoomLevel": 1.5
+    },
+    {
+      "type": "click",
+      "selector": "[data-testid='main-cta']",
+      "zoomLevel": 2.5,
+      "waitAfterClick": 1500
+    }
+  ]
+}
+```
+
 ## 🚀 CI/CD Integration
 
 ### GitHub Actions
@@ -794,6 +1077,28 @@ demo-video-maker --port 8080
   }
 }
 ```
+
+## 🖱️ Visible Cursor in Recordings
+
+Demo Video Maker includes a custom cursor that's visible in video recordings, solving Playwright's limitation where the native cursor doesn't appear in videos.
+
+### Cursor Features
+
+- **Visual Design**: Blue circle with white border and subtle glow effect
+- **Automatic Tracking**: Follows all mouse movements during the demo
+- **Click Animation**: Briefly scales down on clicks for visual feedback
+- **High Visibility**: Includes shadow for contrast on different backgrounds
+- **Always On Top**: Proper z-index ensures cursor is never hidden
+
+### How It Works
+
+The cursor is implemented as a DOM element that:
+1. Moves in sync with Playwright's mouse actions
+2. Updates position via the `updateCameraFollow` function
+3. Animates during click interactions
+4. Remains visible throughout the entire recording
+
+No configuration needed - the cursor automatically appears in all recordings.
 
 ## 📚 API Reference
 
